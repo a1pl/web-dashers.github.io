@@ -73599,7 +73599,7 @@ return {
   },
   139: {
     type: "deco",
-    frame: "d_brick_01_001.png",
+    frame: "d_wheel_03_001.png",
     gridW: 0,
     gridH: 0
   },
@@ -74937,8 +74937,8 @@ return {
             }
         ],
         "default_base_color_channel": 1004,
-        "frame": "block008_topcolor_15_001.png",
-        "glow_frame": "block008_topcolor_15_glow_001.png",
+        "frame": "lightsquare_01_02_001.png",
+        "glow_frame": "lightsquare_01_02_glow_001.png",
         "gridH": 1.0,
         "gridW": 1.0,
         "spritesheet": "GJ_GameSheet-uhd",
@@ -74996,6 +74996,17 @@ return {
         "type": "deco",
         "z": 9
     },
+    111: {
+        "can_color": false,
+        "default_base_color_channel": 0,
+        "frame": "portal_10_front_001.png",
+        "glow_frame": "portal_10_front_glow_001.png",
+        "gridH": 2.866666555404663,
+        "gridW": 1.1333333253860474,
+        "spritesheet": "GJ_GameSheet02-uhd",
+        "type": "portal",
+        "z": 10
+    },
     286: {
         "can_color": false,
         "default_base_color_channel": 0,
@@ -75004,7 +75015,7 @@ return {
         "gridH": 3.0333333015441895,
         "gridW": 1.3666666746139526,
         "spritesheet": "GJ_GameSheet02-uhd",
-        "type": "trigger",
+        "type": "portal",
         "z": 10
     },
      299: {
@@ -75184,7 +75195,7 @@ return {
         "gridH": 3.0333333015441895,
         "gridW": 1.3666666746139526,
         "spritesheet": "GJ_GameSheet02-uhd",
-        "type": "trigger",
+        "type": "portal",
         "z": 10
     },
     117: {
@@ -75206,6 +75217,20 @@ return {
         "frame": "square_f_05_001.png",
         "gridW": 0,
         "gridH": 0,
+        "spritesheet": "GJ_GameSheet-uhd"
+    },    
+    162: {
+        "type": "solid",
+        "frame": "blockOutline_03_001.png",
+        "gridW": 1,
+        "gridH": 1,
+        "spritesheet": "GJ_GameSheet-uhd"
+    },
+    165: {
+        "type": "solid",
+        "frame": "blockOutline_04_001.png",
+        "gridW": 1,
+        "gridH": 1,
         "spritesheet": "GJ_GameSheet-uhd"
     },
   1329: {
