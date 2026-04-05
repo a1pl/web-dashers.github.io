@@ -2707,18 +2707,15 @@ if (this.p.isFlying) {
     }
   }
   flipGravity(flipped, _0x11bbde = 0.5) {
-    if (this.flipCooldown == null || this.flipCooldown < Date.now()) {
-      this.flipCooldown = Date.now() + 100;
-      console.log("flipGravity called: flipped=" + flipped + " current=" + this.p.gravityFlipped);
-      if (this.p.gravityFlipped === flipped) {
-        return;
-      }
-      this.p.gravityFlipped = flipped;
-      this.p.yVelocity *= _0x11bbde;
-      this.p.onGround = false;
-      this.p.canJump = false;
-      this.p.isJumping = false;
+    console.log("flipGravity called: flipped=" + flipped + " current=" + this.p.gravityFlipped);
+    if (this.p.gravityFlipped === flipped) {
+      return;
     }
+    this.p.gravityFlipped = flipped;
+    this.p.yVelocity *= _0x11bbde;
+    this.p.onGround = false;
+    this.p.canJump = false;
+    this.p.isJumping = false;
   }
   runRotateAction() {
 
