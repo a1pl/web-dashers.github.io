@@ -2123,8 +2123,8 @@ class ps {
     this._lastCameraY = cameraY;
     this._aboveContainer.x = -cameraX;
     this._aboveContainer.y = cameraY;
-    if (this.p.isFlying) {
-      const _0x3904f8 = 10;
+if (this.p.isFlying) {
+      const _0x3904f8 = this.p.gravityFlipped ? -10 : 10;
       const _0x285611 = Math.cos(_0x2907d3);
       const _0x501bf9 = Math.sin(_0x2907d3);
       const _0x1b1d28 = -_0x3904f8 * _0x501bf9;
