@@ -1,5 +1,5 @@
 # web-dashers
-<img align="left" width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/1b647556-ef74-47f9-be61-46696c57f04e" />
+<img align="left" width="400" height="400" alt="image" src="https://web-dashers.github.io/assets/logo.png" />
 
 Modding geometrydash.com to add more features
 
