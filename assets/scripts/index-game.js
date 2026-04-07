@@ -66,14 +66,14 @@ preload() {
         E = game.renderer.addBlendMode([_0x47cabb.DST_COLOR, _0x47cabb.ONE_MINUS_SRC_ALPHA], _0x47cabb.FUNC_ADD);
       }
     })(this.game);
-
+ 
     const W = this.cameras.main.width;
     const H = this.cameras.main.height;
     const cx = W / 2;
     const cy = H / 2;
-
+ 
     this.add.rectangle(cx, cy, W, H, 0x000000);
-
+ 
     const barW = W * 0.55;
     const barH = 18;
     const barX = cx - barW / 2;
@@ -83,17 +83,64 @@ preload() {
     barBg.fillRoundedRect(barX - 2, barY - 2, barW + 4, barH + 4, 10);
     barBg.fillStyle(0x001133, 1);
     barBg.fillRoundedRect(barX, barY, barW, barH, 8);
-
+ 
     const barFill = this.add.graphics();
-
+ 
     const pctText = this.add.text(cx, barY + barH + 18, '0%', {
       fontSize: '14px', fontFamily: 'Arial', color: '#6699ff'
     }).setOrigin(0.5, 0);
-
+ 
     const loadingText = this.add.text(cx, barY - 24, 'Loading...', {
       fontSize: '15px', fontFamily: 'Arial', color: '#445588'
     }).setOrigin(0.5, 1);
-
+ 
+    const consoleX = cx - barW / 2;
+    const consoleY = barY + barH + 44;
+    const consoleW = barW;
+    const consoleH = 120;
+    const consoleBg = this.add.graphics();
+    consoleBg.fillStyle(0x000811, 1);
+    consoleBg.fillRoundedRect(consoleX, consoleY, consoleW, consoleH, 6);
+    consoleBg.lineStyle(1, 0x112244, 1);
+    consoleBg.strokeRoundedRect(consoleX, consoleY, consoleW, consoleH, 6);
+    const consoleText = this.add.text(consoleX + 8, consoleY + 8, '', {
+      fontSize: '11px', fontFamily: 'monospace', color: '#3366aa',
+      wordWrap: { width: consoleW - 16 }, lineSpacing: 3
+    });
+ 
+    const consoleLines = [];
+    const fileBytesMap = {};
+    let totalLoadedBytes = 0;
+    let totalExpectedBytes = 0;
+ 
+    const pushLine = (line) => {
+      consoleLines.push(line);
+      if (consoleLines.length > 8) consoleLines.shift();
+      consoleText.setText(consoleLines.join('\n'));
+    };
+ 
+    this.load.on('fileprogress', (file) => {
+      const prev = fileBytesMap[file.key] || { loaded: 0, total: 0 };
+      const nowLoaded = file.bytesLoaded || 0;
+      const nowTotal = file.bytesTotal || 0;
+      totalLoadedBytes += nowLoaded - prev.loaded;
+      if (nowTotal > prev.total) totalExpectedBytes += nowTotal - prev.total;
+      fileBytesMap[file.key] = { loaded: nowLoaded, total: nowTotal };
+      const remaining = Math.max(0, totalExpectedBytes - totalLoadedBytes);
+      const remMB = (remaining / (1024 * 1024)).toFixed(2);
+      const name = (file.url || file.key).split('/').pop();
+      if (consoleLines.length === 0) consoleLines.push('');
+      consoleLines[consoleLines.length - 1] = `> ${name}  (${remMB} MB left)`;
+      consoleText.setText(consoleLines.join('\n'));
+    });
+ 
+    this.load.on('filecomplete', (key, type) => {
+      const entry = fileBytesMap[key] || { loaded: 0, total: 0 };
+      const sizeMB = (entry.total / (1024 * 1024)).toFixed(2);
+      if (consoleLines.length > 0) consoleLines[consoleLines.length - 1] = `  ${key}  [${sizeMB} MB]`;
+      pushLine('');
+    });
+ 
     this.load.on("progress", (value) => {
       barFill.clear();
       const fillW = Math.max(0, barW * value);
@@ -124,7 +171,7 @@ preload() {
     this.load.image("sliderBar", "assets/sprites/sliderBar.png");
     this.load.image("square04_001", "assets/sprites/square04_001.png");
     this.load.image("GJ_square02", "assets/sprites/GJ_square02.png");
-
+ 
     for (let i = 1; i < 23; i++) {
       let index = i-1;
       i = String(i);
@@ -146,87 +193,87 @@ preload() {
       }
       this.load.image("game_bg_"+index, "assets/game-bg/game_bg_"+i+"_001-hd.png");
     }
-
+ 
     this.load.audio("menu_music", "assets/music/menuLoop.mp3");
-
+ 
     this.load.text("level_1", "assets/levels/1.txt");
     this.load.audio("stereo_madness", "assets/music/StereoMadness.mp3");
-
+ 
     this.load.text("level_2", "assets/levels/2.txt");
     this.load.audio("back_on_track", "assets/music/BackOnTrack.mp3");
-
+ 
     this.load.text("level_3", "assets/levels/3.txt");
     this.load.audio("polargeist", "assets/music/Polargeist.mp3");
-
+ 
     this.load.text("level_4", "assets/levels/4.txt");
     this.load.audio("dry_out", "assets/music/DryOut.mp3");
-
+ 
     this.load.text("level_5", "assets/levels/5.txt");
     this.load.audio("base_after_base", "assets/music/BaseAfterBase.mp3");
-
+ 
     this.load.text("level_6", "assets/levels/6.txt");
     this.load.audio("cant_let_go", "assets/music/CantLetGo.mp3");
-
+ 
     this.load.text("level_7", "assets/levels/7.txt");
     this.load.audio("jumper", "assets/music/Jumper.mp3");
-
+ 
     this.load.text("level_8", "assets/levels/8.txt");
     this.load.audio("time_machine", "assets/music/TimeMachine.mp3");
-
+ 
     this.load.text("level_9", "assets/levels/9.txt");
     this.load.audio("cycles", "assets/music/Cycles.mp3");
-
+ 
     this.load.text("level_10", "assets/levels/10.txt");
     this.load.audio("xstep", "assets/music/xStep.mp3");
-
+ 
     this.load.text("level_11", "assets/levels/11.txt");
     this.load.audio("clutterfunk", "assets/music/Clutterfunk.mp3");
-
+ 
     this.load.text("level_12", "assets/levels/12.txt");
     this.load.audio("theory_of_everything", "assets/music/TheoryOfEverything.mp3");
-
+ 
     this.load.text("level_13", "assets/levels/13.txt");
     this.load.audio("electroman_adventures", "assets/music/ElectromanAdventures.mp3");
-
+ 
     this.load.text("level_14", "assets/levels/14.txt");
     this.load.audio("clubstep", "assets/music/Clubstep.mp3");
-
+ 
     this.load.text("level_15", "assets/levels/15.txt");
     this.load.audio("electrodynamix", "assets/music/Electrodynamix.mp3");
-
+ 
     this.load.text("level_16", "assets/levels/16.txt");
     this.load.audio("hexagon_force", "assets/music/HexagonForce.mp3");
-
+ 
     this.load.text("level_17", "assets/levels/17.txt");
     this.load.audio("blast_processing", "assets/music/BlastProcessing.mp3");
-
+ 
     this.load.text("level_18", "assets/levels/18.txt");
     this.load.audio("theory_of_everything_2", "assets/music/TheoryOfEverything2.mp3");
-
+ 
     this.load.text("level_19", "assets/levels/19.txt");
     this.load.audio("geometrical_dominator", "assets/music/GeometricalDominator.mp3");
-
+ 
     this.load.text("level_20", "assets/levels/20.txt");
     this.load.audio("deadlocked", "assets/music/Deadlocked.mp3");
-
+ 
     this.load.text("level_21", "assets/levels/21.txt");
     this.load.audio("fingerdash", "assets/music/Fingerdash.mp3");
-
+ 
     this.load.text("level_22", "assets/levels/22.txt");
     this.load.audio("dash", "assets/music/Dash.mp3");
-
+ 
     this.load.text("level_99", "assets/levels/99.txt");
     this.load.audio("every_end", "assets/music/EveryEnd.mp3");
-
+ 
     this.load.text("level_100", "assets/levels/100.txt");
     this.load.audio("bloodbath", "assets/music/Bloodbath.mp3");
-
+ 
     this.load.text("level_137409445", "assets/levels/137409445.txt");
     this.load.audio("three_step", "assets/music/ThreeStep.mp3");
-
+ 
     this.load.text("level_5703070", "assets/levels/5703070.txt");
     this.load.audio("the_nightmare", "assets/music/Polargeist.mp3");
-
+ 
     this.load.audio("explode_11", "assets/sfx/explode_11.ogg");
     this.load.audio("endStart_02", "assets/sfx/endStart_02.ogg");
     this.load.audio("playSound_01", "assets/sfx/playSound_01.ogg");
