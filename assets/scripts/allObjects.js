@@ -72956,6 +72956,12 @@ return {
     gridW: 1,
     gridH: 1
   },
+  1022: {
+    type: "ring",
+    frame: "gravJumpRing_01_001.png",
+    gridW: 1,
+    gridH: 1,
+  },
   1330: {
     type: "ring",
     frame: "dropRing_01_001.png",
