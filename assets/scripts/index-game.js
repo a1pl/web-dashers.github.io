@@ -21,6 +21,7 @@ window.noClip = false; // experimental
 window.orbClickScale = 2.0;
 window.orbClickShrinkTime = 250;
 window.orbParticleSize = 3.5;
+window.showPercentage = true;
 
 // -------------------------------
 
@@ -2039,7 +2040,7 @@ class ps {
     this.rotateActionDuration = 0;
     this.rotateActionStart = 0;
     this.rotateActionTotal = 0;
-    this._showHitboxes = true;
+    this._showHitboxes = !!window.showHitboxes;
     this._lastLandObject = null;
     this._lastXOffset = 0;
     this._lastCameraX = 0;
@@ -2312,8 +2313,8 @@ class ps {
     });
     this._aboveContainer = scene.add.container(0, 0);
     this._aboveContainer.setDepth(13);
-    this._aboveContainer.add(this._landEmitter1);
-    this._aboveContainer.add(this._landEmitter2);
+    this._gameLayer.topContainer.add(this._landEmitter1);
+    this._gameLayer.topContainer.add(this._landEmitter2);
     this._landIdx = false;
     this._streak = new cs(this._scene, "streak_01", 0.231, 10, 8, 100, window.secondaryColor, 0.7);
     this._streak.addToContainer(this._gameLayer.container, 8);
@@ -2324,9 +2325,8 @@ class ps {
     }
     const _0x119eb7 = this._scene._playerWorldX;
     const _0x519d38 = b(this.p.y);
-    const _mirrorMod = this.p.mirrored ? -1 : 1;
-this._particleEmitter.particleX = _0x119eb7 - 20 * _mirrorMod;
-this._particleEmitter.particleY = _0x519d38 + (this.p.gravityFlipped ? -26 : 26);
+    this._particleEmitter.particleX = _0x119eb7 - 20;
+    this._particleEmitter.particleY = _0x519d38 + (this.p.gravityFlipped ? -26 : 26);
     const _0x4436ac = this.p.onGround && !this.p.isFlying && !this.p.isWave;
     if (_0x4436ac && !this._particleActive) {
       this._particleEmitter.start();
@@ -2338,8 +2338,8 @@ this._particleEmitter.particleY = _0x519d38 + (this.p.gravityFlipped ? -26 : 26)
     {
       const _0xe76a85 = Math.cos(this._rotation);
       const _0x26ec65 = Math.sin(this._rotation);
-      const _0x216018 = this.p.isWave ? 0 : -24 * _mirrorMod;
-      const _0x2baeac = this.p.isWave ? 16 : 18;
+      const _0x216018 = this.p.isWave ? 0 : -24;
+      const _0x2baeac = this.p.isWave ? 4 : 18;
       const _0x75c380 = _0x119eb7 + _0x216018 * _0xe76a85 - _0x2baeac * _0x26ec65;
       const _0x2b31d7 = _0x519d38 + _0x216018 * _0x26ec65 + _0x2baeac * _0xe76a85;
       const _0x5d66f4 = (Math.random() * 2 - 1) * 2 * 2;
@@ -2366,8 +2366,17 @@ this._particleEmitter.particleY = _0x519d38 + (this.p.gravityFlipped ? -26 : 26)
       this._flyParticle2Emitter.stop();
       this._flyParticle2Active = false;
     }
-    this._shipDragEmitter.x = centerX;
+    const _0x2e5643 = _0xc43238 + this._scene._getMirrorXOffset(_0x119eb7 - _0xc43238);
+    this._shipDragEmitter.x = _0x2e5643;
     this._shipDragEmitter.particleY = this.p.gravityFlipped ? b(this.p.y) + _0x52b718 - 30 : b(this.p.y) + _0x52b718 + 30;
+    this._shipDragEmitter.setAngle(this.p.mirrored ? {
+      min: 245,
+      max: 335
+    } : {
+      min: 205,
+      max: 295
+    });
+    this._shipDragEmitter.gravityX = this.p.mirrored ? 700 : -700;
     const _0x2ac9d0 = this.p.isFlying && this.p.onGround && (this.p.gravityFlipped ? this.p.onCeiling : !this.p.onCeiling);
     if (_0x2ac9d0 && !this._shipDragActive) {
       this._shipDragEmitter.start();
@@ -2474,7 +2483,10 @@ if (this.p.isFlying) {
             _0x2c61a1.sprite.y = _0x1a433c;
             const isBallLayer = this._ballLayers.includes(_0x2c61a1);
             _0x2c61a1.sprite.rotation = isBallLayer ? _0x2907d3 : (this.p.mirrored ? -_0x2907d3 : _0x2907d3);
-            const _miniS = this.p.isMini ? 0.6 : 1;
+            let _miniS = this.p.isMini ? 0.6 : 1;
+            if (this.p.isWave && this._waveLayers.includes(_0x2c61a1)) {
+              _miniS *= 0.42; //fix wave size
+            }
             _0x2c61a1.sprite.scaleY = (this.p.gravityFlipped ? -_miniS : _miniS);
             _0x2c61a1.sprite.scaleX = (this.p.mirrored ? -_miniS : _miniS);
         }
@@ -2486,8 +2498,10 @@ if (this.p.isFlying) {
       this._waveSpriteLayer.sprite.y -= 1;
     }
     this._updateParticles(cameraX, cameraY, _0x3afedf);
-    if (window.showHitboxes) {
+    if (this._showHitboxes) {
       this.drawHitboxes(this._hitboxGraphics, cameraX, cameraY);
+    } else if (this._hitboxGraphics) {
+      this._hitboxGraphics.clear();
     }
   }
   enterShipMode(_0xeb37c6 = null) {
@@ -2652,7 +2666,7 @@ hitGround() {
     if (_0x4a38a5 && !this.p.isFlying && !this.p.isWave) {
       this._landIdx = !this._landIdx;
       const _0x31584b = this._landIdx ? this._landEmitter1 : this._landEmitter2;
-      const _0x2248d5 = this._lastCameraX + centerX;
+      const _0x2248d5 = this._scene._playerWorldX;
       const _0x17e0bb = this.p.gravityFlipped ? b(this.p.y) - 30 : b(this.p.y) + 30;
       _0x31584b.explode(10, _0x2248d5, _0x17e0bb);
     }
@@ -2674,7 +2688,7 @@ hitGround() {
     this._streak.stop();
     this._streak.reset();
     const _0x3f4b84 = this._scene;
-    const _0x3f0446 = _0x3f4b84._playerWorldX - _0x3f4b84._cameraX;
+    const _0x3f0446 = _0x3f4b84._getMirrorXOffset(_0x3f4b84._playerWorldX - _0x3f4b84._cameraX);
     const _0x53ac5b = b(this.p.y) + this._lastCameraY;
     const _0x281e43 = 0.9;
     _0x3f4b84.add.particles(_0x3f0446, _0x53ac5b, "GJ_WebSheet", {
@@ -2842,7 +2856,7 @@ hitGround() {
         const _0x159cfa = {
           spr: _0xba83f5,
           particle: _0x298d34,
-          xVel: _0x422587 + (Math.random() * 2 - 1) * _0x1e87b0,
+          xVel: (_0x422587 + (Math.random() * 2 - 1) * _0x1e87b0) * (this.p.mirrored ? -1 : 1),
           yVel: -(12 + (Math.random() * 2 - 1) * 6),
           timer: 1.4,
           fadeTime: 0.5,
@@ -3733,7 +3747,10 @@ _updateBallJump(_0x2fe319) {
     // ----
   }
   setShowHitboxes(_0x2133d2) {
-    this._showHitboxes = /*_0x2133d2*/ true;
+    this._showHitboxes = !!_0x2133d2;
+    if (!this._showHitboxes && this._hitboxGraphics) {
+      this._hitboxGraphics.clear();
+    }
   }
   playEndAnimation(_0x24408e, _0x281588, _0x54bbf4) {
     this._endAnimating = true;
@@ -4287,7 +4304,7 @@ class xs extends Phaser.Scene {
       this._levelLabel.setVisible(false)
       this._leftBtn.setVisible(false)
       this._rightBtn.setVisible(false)
-      this._percentageLabel.setVisible(true)
+      this._percentageLabel.setVisible(window.showPercentage)
       this._percentageLabel.setDepth(9999);
     }, () => this._menuActive && !this._playBtnPressed);
     this._positionMenuItems();
@@ -4441,7 +4458,32 @@ class xs extends Phaser.Scene {
         this._pauseContainer.destroy();
         this._pauseContainer = null;
       }
+      this._noclipCheckbox = null;
+      this._showHitboxesCheckbox = null;
     }
+  }
+  _createPauseToggleButton(_0x5376fd, _0x3b6200, _0x2b25c8, _0xe203c3, _0x268e2b, _0x2d04c4) {
+    const _0x4864cc = this.add.container(_0x3b6200, _0x2b25c8);
+    const _0x3ae5dd = this.add.image(0, 0, "GJ_GameSheet03", _0x268e2b ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png").setScale(0.7).setInteractive();
+    const _0x15c0df = this.add.bitmapText(_0x3ae5dd.width * 0.7 / 2 + 12, 0, "bigFont", _0xe203c3, 32).setOrigin(0, 0.5);
+    _0x4864cc.add([_0x3ae5dd, _0x15c0df]);
+    _0x5376fd.add(_0x4864cc);
+    const _0x232e51 = _0x1dce15 => {
+      _0x3ae5dd.setTexture("GJ_GameSheet03", _0x1dce15 ? "GJ_checkOn_001.png" : "GJ_checkOff_001.png");
+      this._expandHitArea(_0x3ae5dd, 2);
+      _0x2d04c4(_0x1dce15);
+    };
+    this._expandHitArea(_0x3ae5dd, 2);
+    this._makeBouncyButton(_0x3ae5dd, 0.7, () => {
+      _0x232e51(_0x3ae5dd.frame.name === "GJ_checkOff_001.png");
+    }, () => this._paused && !!this._pauseContainer);
+    _0x15c0df.setInteractive();
+    _0x15c0df.on("pointerdown", () => {
+      if (this._paused && this._pauseContainer) {
+        _0x232e51(_0x3ae5dd.frame.name === "GJ_checkOff_001.png");
+      }
+    });
+    return _0x4864cc;
   }
   _buildPauseOverlay() {
     const _0x13af33 = screenWidth / 2;
@@ -4549,6 +4591,20 @@ class xs extends Phaser.Scene {
       this._sfxVolume = _0x3224fb;
       localStorage.setItem("userSfxVol", _0x3224fb);
     });
+
+    this._noclipCheckbox = this._createPauseToggleButton(this._pauseContainer, _0x13af33 - 330, 570, "Noclip", window.noClip, value => {
+      window.noClip = value;
+    });
+
+    this._showHitboxesCheckbox = this._createPauseToggleButton(this._pauseContainer, _0x13af33 - 120, 570, "Hitboxes", window.showHitboxes, value => {
+      window.showHitboxes = value;
+      this._player.setShowHitboxes(value);
+    });
+
+    this._showPercentageCheckbox = this._createPauseToggleButton(this._pauseContainer, _0x13af33 + 130, 570, "Percentage", window.showPercentage, value => {
+      window.showPercentage = value;
+      this._percentageLabel.setVisible(value);
+    });
   }
   _buildInfoPopup() {
     if (this._infoPopup) {
@@ -4575,10 +4631,13 @@ class xs extends Phaser.Scene {
     const _0x22e4c7 = this.add.bitmapText(xPos, yPos, "goldFont", "Made by RobTop Games", 40).setOrigin(0.5, 0.5).setScale(0.6);
     this._infoPopup.add(_0x22e4c7);
     yPos += 60;
-    const _0x3cdf70a = this.add.bitmapText(xPos, yPos, "goldFont", "Modded by: AntiMatter, breadbb", 40).setOrigin(0.5, 0.5).setScale(0.6);
+    const _0x3cdf70a = this.add.bitmapText(xPos, yPos, "goldFont", "Modded by:", 40).setOrigin(0.5, 0.5).setScale(0.6);
     this._infoPopup.add(_0x3cdf70a);
+    yPos += 40;
+    const _0x3cdf70c = this.add.bitmapText(xPos, yPos, "goldFont", "AntiMatter, breadbb, bog, aloaf", 40).setOrigin(0.5, 0.5).setScale(0.6);
+    this._infoPopup.add(_0x3cdf70c);
     yPos += 30;
-    const _0x3cdf70b = this.add.bitmapText(xPos, yPos, "goldFont", "bog, aloaf, PinkDev, and arbstro", 40).setOrigin(0.5, 0.5).setScale(0.6);
+    const _0x3cdf70b = this.add.bitmapText(xPos, yPos, "goldFont", "PinkDev, t0nchi7 and arbstro", 40).setOrigin(0.5, 0.5).setScale(0.6);
     this._infoPopup.add(_0x3cdf70b);
     yPos += 30;
     const _0x97b2a9 = this.add.text(xPos, 463, "© 2026 RobTop Games. All rights reserved.", {
@@ -5000,6 +5059,8 @@ class xs extends Phaser.Scene {
       this._pauseContainer.destroy();
       this._pauseContainer = null;
     }
+    this._noclipCheckbox = null;
+    this._showHitboxesCheckbox = null;
     this._pauseBtn.setVisible(true).setAlpha(75 / 255);
     this._attemptsLabel.setText("Attempt " + this._attempts);
     this._attemptsLabel.setVisible(true);
@@ -5036,6 +5097,8 @@ class xs extends Phaser.Scene {
     if (this._paused && this._pauseContainer) {
       this._pauseContainer.destroy();
       this._pauseContainer = null;
+      this._noclipCheckbox = null;
+      this._showHitboxesCheckbox = null;
       this._buildPauseOverlay();
     }
     this._level.resizeScreen();
@@ -5129,7 +5192,7 @@ class xs extends Phaser.Scene {
         this._levelLabel.setVisible(false)
         this._leftBtn.setVisible(false)
         this._rightBtn.setVisible(false)
-        this._percentageLabel.setVisible(true)
+        this._percentageLabel.setVisible(window.showPercentage)
         this._startGame();
         return;
       }
