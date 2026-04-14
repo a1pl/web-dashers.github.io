@@ -5022,19 +5022,15 @@ this._escKey.on("down", () => {
     this._rightBtn = this.add.image(screenWidth - 429, 30, "GJ_GameSheet03", "edit_leftBtn_001.png").setScrollFactor(0).setDepth(30).setInteractive().setVisible(false);
     this._rightBtn.setRotation(Math.PI);
     window.scene = this.scene;
-    window.rightbuttoncallback = function() {
-      let index = window.allLevels.findIndex(l => l[2] === window.currentlevel[2]);
-      index++;
-      if (index >= window.allLevels.length || index < 0) index = 0;
-      window.currentlevel = [...window.allLevels[index]];
-      window.scene.restart();
+    window.rightbuttoncallback = () => {
+      if (this._levelSelectOverlay && this._levelSelectSwitchLevel) {
+        this._levelSelectSwitchLevel(1);
+      }
     };
-    window.leftbuttoncallback = function() {
-      let index = window.allLevels.findIndex(l => l[2] === window.currentlevel[2]);
-      index--;
-      if (index >= window.allLevels.length || index < 0) index = window.allLevels.length-1;
-      window.currentlevel = [...window.allLevels[index]];
-      window.scene.restart();
+    window.leftbuttoncallback = () => {
+      if (this._levelSelectOverlay && this._levelSelectSwitchLevel) {
+        this._levelSelectSwitchLevel(-1);
+      }
     };
     this._makeBouncyButton(this._leftBtn, 1, () => {window.leftbuttoncallback()}, () => this._menuActive);
     this._makeBouncyButton(this._rightBtn, 1, () => {window.rightbuttoncallback()}, () => this._menuActive);
@@ -5175,7 +5171,26 @@ this._escKey.on("down", () => {
 
     const backBtn = this.add.image(50, 48, "GJ_GameSheet03", "GJ_arrow_03_001.png")
       .setScrollFactor(0).setDepth(154).setFlipX(true).setScale(1, -1).setRotation(Math.PI).setInteractive();
-    backBtn.on("pointerup", () => this._closeLevelSelect());
+    backBtn.on("pointerdown", () => {
+      backBtn._pressed = true;
+      this.tweens.killTweensOf(backBtn);
+      this.tweens.add({ targets: backBtn, scaleX: 1.26, scaleY: -1.26, duration: 300, ease: "Bounce.Out" });
+    });
+    backBtn.on("pointerout", () => {
+      if (backBtn._pressed) {
+        backBtn._pressed = false;
+        this.tweens.killTweensOf(backBtn);
+        this.tweens.add({ targets: backBtn, scaleX: 1, scaleY: -1, duration: 400, ease: "Bounce.Out" });
+      }
+    });
+    backBtn.on("pointerup", () => {
+      if (backBtn._pressed) {
+        backBtn._pressed = false;
+        this.tweens.killTweensOf(backBtn);
+        backBtn.setScale(1, -1);
+        this._closeLevelSelect();
+      }
+    });
 
     const infoBtn = this.add.image(sw - 36, 36, "GJ_GameSheet03", "GJ_infoIcon_001.png")
       .setScrollFactor(0).setDepth(154).setScale(0.7).setRotation(Math.PI / 2).setInteractive();
@@ -5210,7 +5225,10 @@ this._escKey.on("down", () => {
     const cardX = cx;
     const cardY = cy - 100;
 
-    const cardContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(152);
+    const cardSlideContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(152);
+    const cardBounceContainer = this.add.container(cardX, cardY).setScrollFactor(0).setDepth(0);
+    cardSlideContainer.add(cardBounceContainer);
+    const cardContainer = cardSlideContainer;
 
     const cardBg = this.add.graphics();
     const drawCardBg = (colorHex, dark = false) => {
@@ -5220,19 +5238,36 @@ this._escKey.on("down", () => {
       const g = Math.round(((colorHex >> 8)  & 0xff) * mul);
       const b = Math.round(( colorHex        & 0xff) * mul);
       cardBg.fillStyle((r << 16) | (g << 8) | b, 0.92);
-      cardBg.fillRoundedRect(cardX - cardW / 2, cardY - cardH / 2, cardW, cardH, 14);
+      cardBg.fillRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, 14);
     };
     drawCardBg(bgHex, isEveryEnd(window.currentlevel[2]));
-    cardContainer.add(cardBg);
+    cardBounceContainer.add(cardBg);
 
     const cardHit = this.add.zone(cardX, cardY, cardW, cardH)
       .setScrollFactor(0).setDepth(156).setInteractive();
+    cardHit.on("pointerdown", () => {
+      cardHit._pressed = true;
+      this.tweens.killTweensOf(cardBounceContainer, "scale");
+      this.tweens.add({ targets: cardBounceContainer, scale: 1.26, duration: 300, ease: "Bounce.Out" });
+    });
+    cardHit.on("pointerout", () => {
+      if (cardHit._pressed) {
+        cardHit._pressed = false;
+        this.tweens.killTweensOf(cardBounceContainer, "scale");
+        this.tweens.add({ targets: cardBounceContainer, scale: 1, duration: 400, ease: "Bounce.Out" });
+      }
+    });
     cardHit.on("pointerup", () => {
-      this._audio.playEffect("playSound_01", { volume: 1 });
-      this._closeLevelSelect(true);
-      this._audio.stopMusic();
-      this.game.registry.set("autoStartGame", true);
-      this.scene.restart();
+      if (cardHit._pressed) {
+        cardHit._pressed = false;
+        this.tweens.killTweensOf(cardBounceContainer, "scale");
+        cardBounceContainer.setScale(1);
+        this._audio.playEffect("playSound_01", { volume: 1 });
+        this._closeLevelSelect(true);
+        this._audio.stopMusic();
+        this.game.registry.set("autoStartGame", true);
+        this.scene.restart();
+      }
     });
 
     const cardContentObjs = [];
@@ -5278,10 +5313,10 @@ this._escKey.on("down", () => {
       const iconX = cardX - cardW / 2 + 52;
       const isHardDemon = diffIconKey === "diffIcon_06_btn_001";
       const iconRotation = isHardDemon ? Math.PI / 2 : 0;
-      const demonIcon = this.add.image(iconX, cardY, "GJ_GameSheet03", diffFrame)
+      const demonIcon = this.add.image(iconX - cardX, 0, "GJ_GameSheet03", diffFrame)
         .setScrollFactor(0).setDepth(155).setScale(1.25).setOrigin(0.5, 0.5).setRotation(iconRotation);
       cardContentObjs.push(demonIcon);
-      cardContainer.add(demonIcon);
+      cardBounceContainer.add(demonIcon);
 
       const maxIconH = cardH - 16;
       const maxIconW = 80;
@@ -5316,13 +5351,13 @@ this._escKey.on("down", () => {
       const groupStartX = cardX - totalW / 2;
 
       demonIcon.setScale(finalIconScale * groupScale);
-      demonIcon.setPosition(groupStartX + scaledIconW / 2, cardY);
+      demonIcon.setPosition(groupStartX + scaledIconW / 2 - cardX, 0);
 
       nameLabel.setScale(groupScale);
-      nameLabel.setPosition(groupStartX + scaledIconW + scaledGap, cardY);
+      nameLabel.setPosition(groupStartX + scaledIconW + scaledGap - cardX, 0);
 
       cardContentObjs.push(nameLabel);
-      cardContainer.add(nameLabel);
+      cardBounceContainer.add(nameLabel);
     };
 
     const barAreaY = cardY + cardH / 2 + 100;
@@ -5393,8 +5428,13 @@ this._escKey.on("down", () => {
         duration: slideDur,
         ease: "Quad.In",
         onComplete: () => {
-          for (const o of [...cardContentObjs, ...barObjs]) {
-            cardContainer.remove(o, false);
+          for (const o of cardContentObjs) {
+            cardBounceContainer.remove(o, false);
+            this.tweens.killTweensOf(o);
+            o.destroy();
+          }
+          for (const o of barObjs) {
+            cardSlideContainer.remove(o, false);
             this.tweens.killTweensOf(o);
             o.destroy();
           }
@@ -5424,16 +5464,13 @@ this._escKey.on("down", () => {
       });
     };
 
-    arrowL.on("pointerup", () => {
-      switchLevel(-1);
-    });
-    arrowR.on("pointerup", () => {
-      switchLevel(1);
-    });
+    this._makeBouncyButton(arrowL, 1.1, () => { switchLevel(-1); });
+    this._makeBouncyButton(arrowR, 1.1, () => { switchLevel(1); });
 
     const inputBlocker = this.add.zone(cx, cy, sw, sh)
       .setScrollFactor(0).setDepth(151).setInteractive();
-    this._levelSelectStaticObjs  = [overlay, inputBlocker, tableBottom, ...staticGroundTiles, staticFloorLine, cornerBL, cornerBR, backBtn, infoBtn, arrowL, arrowR, cardContainer, cardHit];
+    this._levelSelectStaticObjs  = [overlay, inputBlocker, tableBottom, ...staticGroundTiles, staticFloorLine, cornerBL, cornerBR, backBtn, infoBtn, arrowL, arrowR, cardSlideContainer, cardHit];
+    this._levelSelectSwitchLevel = switchLevel;
     this._levelSelectDotObjs     = dotObjs;
     this._levelSelectCardContent = cardContentObjs;
     this._levelSelectBarObjs     = barObjs;
@@ -5454,6 +5491,7 @@ this._escKey.on("down", () => {
       this._levelSelectDotObjs     = null;
       this._levelSelectCardContent = null;
       this._levelSelectBarObjs     = null;
+      this._levelSelectSwitchLevel = null;
     };
     if (silent) { destroy(); return; }
     const sw = screenWidth;
@@ -5707,7 +5745,8 @@ this._escKey.on("down", () => {
     yPos += 30;
     const _0x3cdf70b = this.add.bitmapText(xPos, yPos, "goldFont", "PinkDev, t0nchi7, arbstro", 40).setOrigin(0.5, 0.5).setScale(0.6);
     this._infoPopup.add(_0x3cdf70b);
-    const _0x3cdf70d = this.add.bitmapText(xPos, yPos, "goldFont", ", and rohanis0000", 40).setOrigin(0.5, 0.5).setScale(0.6);
+    yPos += 30;
+    const _0x3cdf70d = this.add.bitmapText(xPos, yPos, "goldFont", " and rohanis0000", 40).setOrigin(0.5, 0.5).setScale(0.6);
     this._infoPopup.add(_0x3cdf70d);
     yPos += 30;
     const _0x97b2a9 = this.add.text(xPos, 463, "© 2026 RobTop Games. All rights reserved.", {
@@ -6322,13 +6361,15 @@ this._escKey.on("down", () => {
         this._startGame();
         return;
       }
-      if (this._leftKey.isDown || this._rightKey.isDown || this._aKey.isDown || this._dKey.isDown) {
-        if (this._leftKey.isDown || this._aKey.isDown) {
-          window.leftbuttoncallback();
-        } else {
-          window.rightbuttoncallback();
+      const _arrowLeft = this._leftKey.isDown || this._aKey.isDown;
+      const _arrowRight = this._rightKey.isDown || this._dKey.isDown;
+      if ((_arrowLeft || _arrowRight) && !this._arrowWasDown) {
+        if (this._levelSelectOverlay) {
+          if (_arrowLeft) window.leftbuttoncallback();
+          else window.rightbuttoncallback();
         }
       }
+      this._arrowWasDown = _arrowLeft || _arrowRight;
       this._spaceWasDown = this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown;
       const _0x1e9cf4 = Math.min(_0xaf2ffd / 1000 * 60, 2);
       const _0x2e19f3 = 0.25;
