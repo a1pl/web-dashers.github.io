@@ -1211,10 +1211,6 @@ class us {
       } else if (!_0x24471f) {
         _0x443c50.add(_0x1b937f.id);
         if (_0x1b937f.id === 1331) {
-          console.log("UFO portal debug - ID 1331 not found in allObjects");
-          console.log("UFO portal debug - allObjects[1331] value:", allObjects[1331]);
-          console.log("UFO portal debug - allObjects type:", typeof allObjects);
-          console.log("UFO portal debug - allObjects has 1331:", allObjects.hasOwnProperty(1331));
         }
         console.warn("Object ID " + _0x1b937f.id + " has no definition in allObjects at x=" + _0x173c58 + " y=" + _0x7ab528);
       }
