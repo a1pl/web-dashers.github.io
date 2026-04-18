@@ -2966,11 +2966,17 @@ if (this.p.isFlying || this.p.isUfo) {
     this._particleEmitter.stop();
     this._streak.reset();
     this._streak.start();
-    this.setCubeVisible(false);
     this.setBallVisible(false);
     this.setShipVisible(false);
     this.setWaveVisible(false);
+    this.setSpiderVisible(false);
     this.setBirdVisible(true);
+    this.setCubeVisible(true);
+    for (const _layer of this._playerLayers) {
+      if (_layer) {
+        _layer.sprite.setScale(0.55);
+      }
+    }
     let _spawnY = this.p.y;
     if (_portal) {
       _spawnY = _portal.portalY !== undefined ? _portal.portalY : _portal.y;
