@@ -1,32 +1,25 @@
 window.ApiWrapper = class ApiWrapper {
-	static proxyurl = "https://proxy.corsfix.com/?"
-	static setProxy(string) {
-		this.proxyurl = string
-	}
-	static getProxy() {
-		return this.proxyurl;
+	static async _ready() {
+		await window._libcurlReady;
 	}
 	static async downloadSong(id) {
-		let data = `songID=${id}&secret=Wmfd2893gb7`
-		let response = await fetch(window._gdProxyUrl + "/getGJSongInfo.php", {
-			method: "POST",
-			body: data
-		});
-		let text = await response.text();
-		let url = decodeURIComponent(text?.split("~|~10~|~")[1]?.split("~|~")[0]);
-		let audioresponse = await fetch(this.proxyurl + url);
+		await this._ready();
+		let audioresponse = await libcurl.fetch(`https://fetchsongid.lasokar.workers.dev?id=${id}`);
 		let blob = await audioresponse.blob();
 		return window.URL.createObjectURL(blob);
 	}
     static async downloadSfx(id){
-		let audioresponse = await fetch(this.proxyurl + "https://geometrydashfiles.b-cdn.net/sfx/s"+id+".ogg");
+		await this._ready();
+		let audioresponse = await libcurl.fetch(`https://geometrydashfiles.b-cdn.net/sfx/s${id}.ogg`);
 		let blob = await audioresponse.blob();
 		return window.URL.createObjectURL(blob);
     }
 	static async downloadLevel(id) {
+		await this._ready();
 		let data = `levelID=${id}&secret=Wmfd2893gb7`
-		let response = await fetch(window._gdProxyUrl + "/downloadGJLevel22.php", {
+		let response = await libcurl.fetch("https://www.boomlings.com/database/downloadGJLevel22.php", {
 			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
 			body: data
 		});
 		let text = await response.text();

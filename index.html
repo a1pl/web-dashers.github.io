@@ -26,10 +26,14 @@
 	<script src="assets/scripts/phaser.min.js"></script>
 	<script src="assets/scripts/pako.min.js"></script>
 	<script src="assets/scripts/cache-manager.js"></script>
+	<script src="https://unpkg.com/libcurl.js@0.7.1/libcurl.js"></script>
+	<script>
+		window._libcurlReady = libcurl.load_wasm("https://unpkg.com/libcurl.js@latest/libcurl.wasm").then(() => {
+			libcurl.set_websocket("wss://glseries.net/wisp/"); // marki said it was fine
+		});
+	</script>
 	<script src="assets/scripts/GDapiWrapper.js"></script>
 	<!-- - -->
-	<!-- worker -->
-	<script>window._gdProxyUrl = "https://gd-proxy.gmdc.workers.dev";</script>
 	<!-- ACTUAL GAME CODE -->
 	<script type="module" crossorigin src="assets/scripts/index-game.js"></script>
 	<!-- - -->

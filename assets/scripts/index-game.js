@@ -5933,13 +5933,9 @@ class xs extends Phaser.Scene {
       const _doSearchInner = async (levelId) => {
         _showStatus("fetching level", "#ffb700");
 
-        const PROXY_BASE = (window._gdProxyUrl || "").replace(/\/$/, "");
-        if (!PROXY_BASE) {
-          _showStatus("no proxy configured. set window._gdProxyUrl first.", "#ff0000");
-          return;
-        }
+        await window._libcurlReady;
         const formBody = `levelID=${levelId}&secret=Wmfd2893gb7`;
-        const res = await fetch(`${PROXY_BASE}/downloadGJLevel22.php`, {
+        const res = await libcurl.fetch("https://www.boomlings.com/database/downloadGJLevel22.php", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: formBody
@@ -5973,38 +5969,29 @@ class xs extends Phaser.Scene {
           window._onlineSongBuffer = null; 
           window._onlineSongKey    = null;
           try {
-            const ngRes = await fetch(`${PROXY_BASE}/getGJSongInfo.php`, {
+            const ngRes = await libcurl.fetch("https://www.boomlings.com/database/getGJSongInfo.php", {
               method: "POST",
               headers: { "Content-Type": "application/x-www-form-urlencoded" },
               body: `songID=${songIdRaw}&secret=Wmfd2893gb7`
             });
             const ngText = ngRes.ok ? await ngRes.text() : "-1";
             console.log("song info response:", ngText.slice(0, 200));
-            if (ngText && ngText !== "-1") { 
-              const ngParts = ngText.split("~|~");
-              const ngMap = {};
-              for (let i = 0; i + 1 < ngParts.length; i += 2) ngMap[ngParts[i]] = ngParts[i + 1];
-              const rawUrl  = (ngMap["10"] || "").trim();
-              const songUrl = decodeURIComponent(rawUrl);
-              const songArtist = (ngMap["4"]  || "Unknown").replace(/:$/, "").trim();
-              const songTitle  = (ngMap["2"]  || `Song #${songIdRaw}`).replace(/:$/, "").trim();
-              console.log("song url:", songUrl);
-              if (songUrl) {
-                _showStatus(`loading "${songTitle}" by ${songArtist}...`, "#00ff00");
-                const audioCtx = this.game.sound.context;
-                if (audioCtx.state === "suspended") await audioCtx.resume();
-                const proxiedUrl = `${PROXY_BASE}/audio-proxy?url=${encodeURIComponent(songUrl)}`;
-                const audioRes = await fetch(proxiedUrl);
-                if (!audioRes.ok) throw new Error(`audio proxy returned ${audioRes.status}`);
-                const arrayBuf = await audioRes.arrayBuffer();
-                const decoded  = await audioCtx.decodeAudioData(arrayBuf);
-                window._onlineSongBuffer = decoded;
-                window._onlineSongKey    = songKey;
-                window._onlineSongTitle  = songTitle;
-                window._onlineSongArtist = songArtist;
-                console.log("song decoded ok, duration:", decoded.duration.toFixed(1) + "s");
-              }
-            }
+            const ngParts = ngText && ngText !== "-1" ? ngText.split("~|~") : [];
+            const ngMap = {};
+            for (let i = 0; i + 1 < ngParts.length; i += 2) ngMap[ngParts[i]] = ngParts[i + 1];
+            const songArtist = (ngMap["4"] || "Unknown").replace(/:$/, "").trim();
+            const songTitle  = (ngMap["2"] || `Song #${songIdRaw}`).replace(/:$/, "").trim();
+            _showStatus(`loading "${songTitle}" by ${songArtist}...`, "#00ff00");
+            const audioCtx = this.game.sound.context;
+            if (audioCtx.state === "suspended") await audioCtx.resume();
+            const audioRes = await libcurl.fetch(`https://fetchsongid.lasokar.workers.dev?id=${songIdRaw}`); // url from lasokar's gdweb mod
+            if (!audioRes.ok) throw new Error(`song fetch returned ${audioRes.status}`);
+            const decoded = await audioCtx.decodeAudioData(await audioRes.arrayBuffer());
+            window._onlineSongBuffer = decoded;
+            window._onlineSongKey    = songKey;
+            window._onlineSongTitle  = songTitle;
+            window._onlineSongArtist = songArtist;
+            console.log("song decoded, duration is:", decoded.duration.toFixed(1) + "s");
           } catch (songErr) {
             console.warn("song fetch failed using default music:", songErr);
           }
