@@ -4,7 +4,7 @@ window.ApiWrapper = class ApiWrapper {
 	}
 	static async downloadSong(id) {
 		await this._ready();
-		let audioresponse = await libcurl.fetch(`https://fetchsongid.lasokar.workers.dev?id=${id}`);
+		let audioresponse = await libcurl.fetch(`https://fetchsongid.lasokar.workers.dev?id=${id}`); // lowk kinda broken, 
 		let blob = await audioresponse.blob();
 		return window.URL.createObjectURL(blob);
 	}
