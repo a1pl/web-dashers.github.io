@@ -241,7 +241,6 @@ preload() {
     this.load.audio("StayInsideMe", "assets/music/StayInsideMe.mp3");
 
     for (const lvlarray of window.allLevels){
-      this.load.text(lvlarray[2], "assets/levels/"+lvlarray[2].split("_")[1]+".txt");
       this.load.audio(lvlarray[0], "assets/music/"+(lvlarray[4] ? lvlarray[4] : lvlarray[1].replaceAll(" ", ""))+".mp3");
     }
  
@@ -5535,7 +5534,7 @@ class xs extends Phaser.Scene {
       key: "GameScene"
     });
   }
-  create() {
+  async create() {
     this._bgSpeedX = 0.1;
     this._bgSpeedY = 0.1;
     this._menuCameraX = -centerX;
@@ -5577,6 +5576,31 @@ class xs extends Phaser.Scene {
     let _0x591888 = this.cache.text.get(window.currentlevel[2]);
     if (!_0x591888 && window._onlineLevelString && window.currentlevel[2] === window._onlineLevelId) {
       _0x591888 = window._onlineLevelString;
+    }
+    if (!_0x591888) {
+      const _gdId = (window.currentlevel[2] || "").split("_")[1];
+      if (_gdId && window.ApiWrapper) {
+        try {
+          const _lvlObj = await window.ApiWrapper.downloadLevel(_gdId);
+          if (_lvlObj && _lvlObj.levelString) {
+            _0x591888 = _lvlObj.levelString;
+            try { this.cache.text.add(window.currentlevel[2], _0x591888); } catch(e) {}
+          }
+        } catch (e) {
+          console.warn("level api fetch failed, trying local:", e);
+        }
+      }
+      if (!_0x591888 && _gdId) {
+        try {
+          const _res = await fetch("assets/levels/" + _gdId + ".txt");
+          if (_res.ok) {
+            _0x591888 = await _res.text();
+            try { this.cache.text.add(window.currentlevel[2], _0x591888); } catch(e) {}
+          }
+        } catch (e) {
+          console.warn("local level fallback failed:", e);
+        }
+      }
     }
     if (_0x591888) {
       this._level.loadLevel(_0x591888);
