@@ -690,7 +690,8 @@ window.allobjects = function() {
   "66": {
     "type": "solid",
     "frame": "square_b_05_001.png",
-    "can_color": false,
+    "can_color": true,
+    "black": true,
     "gridW": 1,
     "gridH": 0.5,
     "default_detail_color_channel": -1,

@@ -172,5 +172,11 @@ window.allLevels = [
 	    "Nine Circles",
 	    "level_4284013",
 	    ["Zobros", "Rukkus"]
+    ],
+    [
+        "stereo_madness",
+	    "Test Level",
+	    "level_23",
+	    ["rohanis0000", "Forever Bound"]
     ]
 ]
