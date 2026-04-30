@@ -201,11 +201,11 @@ class BootScene extends Phaser.Scene {
       this.load.audio("highscoreGet02", "assets/sfx/highscoreGet02.ogg");
 
       this.load.on("progress", (value) => {
-        if (sliderFill) sliderFill.width = value * 306;
+        if (sliderFill) sliderFill.width = value * 380;
       });
       this.load.on("loaderror", () => {});
       this.load.once("complete", () => {
-        if (sliderFill) sliderFill.width = 306;
+        if (sliderFill) sliderFill.width = 380;
         this.time.delayedCall(200, () => {
           const bigFontData = this.cache.text.get("bigFontFnt");
           if (bigFontData) loadFont(this, "bigFont", bigFontData);
