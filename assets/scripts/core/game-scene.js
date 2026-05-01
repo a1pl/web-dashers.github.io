@@ -3231,7 +3231,18 @@ _buildSettingsPopup() {
     this._player2.setBallVisible(false);
     this._player2.setWaveVisible(false);
     this._glitterEmitter.stop();
-    playerSpeed = SpeedPortal.ONE_TIMES;
+    let speedKey = parseInt(window.settingsMap["kA4"] || "0");
+    if (speedKey == 0) {
+      playerSpeed = SpeedPortal.ONE_TIMES;
+    } else if (speedKey == 1) {
+      playerSpeed = SpeedPortal.HALF;
+    } else if (speedKey == 2) {
+      playerSpeed = SpeedPortal.TWO_TIMES;
+    } else if (speedKey == 3) {
+      playerSpeed = SpeedPortal.THREE_TIMES;
+    } else if (speedKey == 4) {
+      playerSpeed = SpeedPortal.FOUR_TIMES;
+    }
     this._level.resetObjects();
     this._level.shiftGroundTiles(this._cameraX - _0x2ba78a);
     this._level.resetGroundState();
