@@ -186,52 +186,67 @@ class WaveTrail {
     const n = pts.length;
     const upper = new Array(n);
     const lower = new Array(n);
-    const segNx = new Array(n - 1);
-    const segNy = new Array(n - 1);
-    for (let i = 0; i < n - 1; i++) {
-      const dx = pts[i+1].x - pts[i].x;
-      const dy = pts[i+1].y - pts[i].y;
-      const len = Math.sqrt(dx*dx + dy*dy) || 1;
-      segNx[i] = -dy / len;
-      segNy[i] = dx / len;
-    }
-    const MITER_LIMIT_SQ = 4;
+    
     for (let i = 0; i < n; i++) {
-      const px = pts[i].x, py = pts[i].y;
+      const p = pts[i];
+      let nx, ny;
+
       if (i === 0) {
-        upper[0] = { x: px + segNx[0] * halfW, y: py + segNy[0] * halfW };
-        lower[0] = { x: px - segNx[0] * halfW, y: py - segNy[0] * halfW };
+        const dx = pts[1].x - p.x;
+        const dy = pts[1].y - p.y;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        nx = -dy / len;
+        ny = dx / len;
       } else if (i === n - 1) {
-        upper[i] = { x: px + segNx[i-1] * halfW, y: py + segNy[i-1] * halfW };
-        lower[i] = { x: px - segNx[i-1] * halfW, y: py - segNy[i-1] * halfW };
+        const dx = p.x - pts[i - 1].x;
+        const dy = p.y - pts[i - 1].y;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        nx = -dy / len;
+        ny = dx / len;
       } else {
-        const nx = segNx[i-1] + segNx[i];
-        const ny = segNy[i-1] + segNy[i];
-        const nlen = Math.sqrt(nx*nx + ny*ny);
-        if (nlen < 1e-6) {
-          upper[i] = { x: px + segNx[i-1] * halfW, y: py + segNy[i-1] * halfW };
-          lower[i] = { x: px - segNx[i-1] * halfW, y: py - segNy[i-1] * halfW };
-        } else {
-          const mnx = nx / nlen, mny = ny / nlen;
-          const dot = mnx * segNx[i-1] + mny * segNy[i-1];
-          const scale = dot > 1e-4 ? Math.min(halfW / dot, halfW * 2) : halfW;
-          upper[i] = { x: px + mnx * scale, y: py + mny * scale };
-          lower[i] = { x: px - mnx * scale, y: py - mny * scale };
-        }
+        const dx1 = p.x - pts[i - 1].x;
+        const dy1 = p.y - pts[i - 1].y;
+        const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1) || 1;
+
+        const dx2 = pts[i + 1].x - p.x;
+        const dy2 = pts[i + 1].y - p.y;
+        const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2) || 1;
+
+        nx = -(dy1 / len1 + dy2 / len2) * 0.5;
+        ny = (dx1 / len1 + dx2 / len2) * 0.5;
       }
+
+      upper[i] = { x: p.x + nx * halfW, y: p.y + ny * halfW };
+      lower[i] = { x: p.x - nx * halfW, y: p.y - ny * halfW };
     }
     return { upper, lower };
   }
 
-  _drawRibbon(gfx, pts, halfW, color, baseAlpha) {
+  _drawRibbon(gfx, pts, halfW, color, baseAlpha, antialias = false) {
     const n = pts.length;
     if (n < 2) return;
+
     const { upper, lower } = this._buildEdges(pts, halfW);
+    if (antialias) {
+      this._drawRibbon(gfx, pts, halfW + 0.5, color, baseAlpha * 0.5, false);
+    }
+
     for (let i = 0; i < n - 1; i++) {
-      const alpha = Math.max(0, ((1 - pts[i].age) + (1 - pts[i+1].age)) * 0.5) * baseAlpha;
+      const alpha = Math.max(0, (1 - (pts[i].age + pts[i+1].age) * 0.5)) * baseAlpha;
       if (alpha <= 0.01) continue;
+
       gfx.fillStyle(color, alpha);
-      gfx.fillPoints([upper[i], upper[i+1], lower[i+1], lower[i]], true);
+      
+      gfx.fillTriangle(
+        upper[i].x, upper[i].y,
+        upper[i+1].x, upper[i+1].y,
+        lower[i].x, lower[i].y
+      );
+      gfx.fillTriangle(
+        upper[i+1].x, upper[i+1].y,
+        lower[i+1].x, lower[i+1].y,
+        lower[i].x, lower[i].y
+      );
     }
   }
 
@@ -661,7 +676,7 @@ class PlayerObject {
       this._flyParticle2Emitter.particleX = particleX;
       this._flyParticle2Emitter.particleY = particleY + randomOffset;
       this._streak.setPosition(this.p.isWave ? particleX : (this.p.isUfo ? particleX : particleX + 8), particleY);
-      this._waveTrail.setPosition(particleX, particleY);
+      this._waveTrail.setPosition(playerWorldX, playerWorldY);
     }
     this._streak.update(deltaTime);
     this._waveTrail.update(deltaTime);
