@@ -1628,7 +1628,8 @@ if (this.p.isFlying || this.p.isUfo) {
   updateBallRoll(_0x1dd8af, onSurface) {
     const _0x136f29 = this.p.gravityFlipped ? -1 : 1;
     const speedFactor = onSurface ? 0.5 : 0.35;
-    this._rotation += _0x1dd8af / (g / 2) * _0x136f29 * speedFactor;
+    const miniRollScale = this.p.isMini ? 1 / 0.8 : 1;
+    this._rotation += _0x1dd8af / (g / 2) * _0x136f29 * speedFactor * miniRollScale;
   }
   updateShipRotation(_0x217ad3) {
     let _0x48f422 = -(this.p.y - this.p.lastY);
@@ -1708,6 +1709,7 @@ if (this.p.isFlying || this.p.isUfo) {
     }
   }
   _updateFlyJump(_0x130c46) {
+    const _shipMiniScale = this.p.isMini ? 1.176470588 : 1;
     let _0x203040 = 0.8;
     if (this.p.upKeyDown) {
       _0x203040 = -1;
@@ -1719,27 +1721,26 @@ if (this.p.isFlying || this.p.isUfo) {
     if (this.p.upKeyDown && this.playerIsFalling()) {
       _0x2d237f = 0.5;
     }
-    this.p.yVelocity -= p * _0x130c46 * this.flipMod() * _0x203040 * _0x2d237f;
+    this.p.yVelocity -= p * _0x130c46 * this.flipMod() * _0x203040 * _0x2d237f * _shipMiniScale;
     if (this.p.upKeyDown) {
       this.p.onGround = false;
     }
     if (!this.p.wasBoosted) {
       if (this.p.gravityFlipped) {
-        this.p.yVelocity = Math.max(this.p.yVelocity, -16);
-        this.p.yVelocity = Math.min(this.p.yVelocity, 12.8);
+        this.p.yVelocity = Math.max(this.p.yVelocity, -16 * _shipMiniScale);
+        this.p.yVelocity = Math.min(this.p.yVelocity, 12.8 * _shipMiniScale);
       } else {
-        this.p.yVelocity = Math.max(this.p.yVelocity, -12.8);
-        this.p.yVelocity = Math.min(this.p.yVelocity, 16);
+        this.p.yVelocity = Math.max(this.p.yVelocity, -12.8 * _shipMiniScale);
+        this.p.yVelocity = Math.min(this.p.yVelocity, 16 * _shipMiniScale);
       }
     }
   }
 _updateBallJump(_0x2fe319) {
-  const _miniGrav = this.p.isMini ? 1.4 : 1;
-  const _0x144266 = p * 0.6 * _miniGrav;
+  const _0x144266 = p * 0.6;
   if (this.p.upKeyPressed && this.p.canJump) {
     const _0x47d739 = this.flipMod();
     this.p.upKeyPressed = false;
-    this.p.yVelocity = _0x47d739 * 22.360064;
+    this.p.yVelocity = _0x47d739 * 22.360064 * (this.p.isMini ? 0.8 : 1);
     this.flipGravity(!this.p.gravityFlipped);
     this.p.onGround = false;
     this.p.canJump = false;
@@ -2090,6 +2091,9 @@ _updateBallJump(_0x2fe319) {
                 else if (_padId === 140) { _padVel = 6.72 * _grav; }
                 else if (_padId === 1332) { _padVel = 12 * _grav; }
                 else if (_padId === 67) { _padVel = 10.0 * _grav; _padFlip = true; }
+                if (this.p.isMini) {
+                  _padVel *= 0.8;
+                }
               } else {
                 if (_padId === 35) { _padVel = 16 * _grav; }
                 else if (_padId === 140) { _padVel = 10.4 * _grav; }
@@ -2222,7 +2226,7 @@ _updateBallJump(_0x2fe319) {
                   else if (_orbId === 1022) { _orbVel = _spiderBase * -1; _flipAfter = true; }
                   else if (_orbId === 1330) { _orbVel = -28; }
                 } else if (this.p.isBall) {
-                  const _ballBase = _cubeJump * 0.7;
+                  const _ballBase = _cubeJump * 0.7 * (this.p.isMini ? 0.8 : 1);
                   if (_orbId === 36) { _orbVel = _ballBase; }
                   else if (_orbId === 141) { _orbVel = _ballBase * 0.77; }
                   else if (_orbId === 1333) { _orbVel = _ballBase * 1.34; }
