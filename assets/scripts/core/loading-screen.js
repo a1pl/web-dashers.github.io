@@ -74,9 +74,47 @@ class BootScene extends Phaser.Scene {
     if (window.gameCache) window.gameCache.init();
     (function (game) {
       if (game.renderer.type === Phaser.WEBGL) {
-        let gl = game.renderer.gl;
-         window.S = game.renderer.addBlendMode([gl.SRC_ALPHA, gl.ONE], gl.FUNC_ADD);
-        window.E = game.renderer.addBlendMode([gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA], gl.FUNC_ADD);
+        try {
+          let gl = game.renderer.gl;
+          if (gl && gl.isContextLost()) {
+            console.warn('WebGL context lost now using blend modes');
+            window.S = Phaser.BlendModes.ADD;
+            window.E = Phaser.BlendModes.MULTIPLY;
+          } else {
+            window.S = game.renderer.addBlendMode([gl.SRC_ALPHA, gl.ONE], gl.FUNC_ADD);
+            window.E = game.renderer.addBlendMode([gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA], gl.FUNC_ADD);
+          }
+        } catch (e) {
+          window.S = Phaser.BlendModes.ADD;
+          window.E = Phaser.BlendModes.MULTIPLY;
+        }
+      } else {
+        console.log('using Canvas renderer setting blend modes');
+        window.S = Phaser.BlendModes.ADD;
+        window.E = Phaser.BlendModes.MULTIPLY;
+      }
+      if (game.canvas) {
+        game.canvas.addEventListener('webglcontextlost', (e) => {
+          console.warn('WebGL context lost');
+          e.preventDefault();
+          window.S = Phaser.BlendModes.ADD;
+          window.E = Phaser.BlendModes.MULTIPLY;
+        });
+        
+        game.canvas.addEventListener('webglcontextrestored', (e) => {
+          console.log('WebGL context is back');
+          if (game.renderer.type === Phaser.WEBGL && game.renderer.gl) {
+            try {
+              let gl = game.renderer.gl;
+              window.S = game.renderer.addBlendMode([gl.SRC_ALPHA, gl.ONE], gl.FUNC_ADD);
+              window.E = game.renderer.addBlendMode([gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA], gl.FUNC_ADD);
+            } catch (e) {
+              console.warn('failed to bring back WebGL blend modes:', e);
+              window.S = Phaser.BlendModes.ADD;
+              window.E = Phaser.BlendModes.MULTIPLY;
+            }
+          }
+        });
       }
     })(this.game);
 
@@ -169,6 +207,11 @@ class BootScene extends Phaser.Scene {
       this.load.text("bigFontFnt", "assets/fonts/bigFont.fnt");
       this.load.image("square04_001", "assets/sprites/square04_001.png");
       this.load.image("GJ_square02", "assets/sprites/GJ_square02.png");
+      this.load.image("GJ_square01", "assets/sprites/GJ_square01.png");
+      this.load.image("square01_001", "assets/sprites/square01_001.png");
+      this.load.image("loadingCircle", "assets/sprites/loadingCircle.png");
+      this.load.image("GJ_button01", "assets/sprites/GJ_button_01.png");
+      this.load.image("GJ_button02", "assets/sprites/GJ_button_02.png");
       this.load.image("GJ_button_01", "assets/sprites/GJ_button_01.png");
 
       for (let i = 1; i < 23; i++) {

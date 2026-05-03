@@ -29849,7 +29849,7 @@ window.allobjects = function() {
   },
   "1751": {
     "type": "ring",
-    "frame": "dashRing_01_001.png",
+    "frame": "dashRing_02_001.png",
     "gridW": 1.2,
     "gridH": 1.2,
     "default_detail_color_channel": -1,

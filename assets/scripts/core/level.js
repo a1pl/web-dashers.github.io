@@ -988,10 +988,12 @@ window.LevelObject = class LevelObject {
           if (objectDef && objectDef.type === ringType) {
             sprite.setScale(0.75);
             sprite._eeAudioScale = true;
+            sprite._orbId = levelObj.id;
             this._orbSprites.push(sprite);
             if (_0xOrbGlow) {
               _0xOrbGlow.setScale(0.75);
               _0xOrbGlow._eeAudioScale = true;
+              _0xOrbGlow._orbId = levelObj.id;
               this._orbSprites.push(_0xOrbGlow);
             }
           }
