@@ -101,6 +101,12 @@ function parseLevel(levelString) {
   };
 }
 
+function getGroundTextureId(groundSetting) {
+  const parsedGroundId = parseInt(String(groundSetting ?? "0"), 10);
+  const textureIndex = isNaN(parsedGroundId) || parsedGroundId <= 1 ? 0 : parsedGroundId - 1;
+  return String(textureIndex).padStart(2, "0");
+}
+
 const solidType = "solid";
 const hazardType = "hazard";
 const decoType = "deco";
@@ -363,10 +369,7 @@ window.LevelObject = class LevelObject {
     if (window._backgroundId.length < 2) {
       window._backgroundId = "0"+window._backgroundId;
     }
-    window._groundId = settingsMap["kA7"] ? String(settingsMap["kA7"]) : "01";
-    if (window._groundId.length < 2) {
-      window._groundId = "0"+window._groundId;
-    }
+    window._groundId = getGroundTextureId(settingsMap["kA7"]);
     if (colorStr) {
       let channels = colorStr.split("|");
       for (let ch of channels) {
@@ -410,7 +413,7 @@ window.LevelObject = class LevelObject {
   }
   _buildGround() {
     const scene = this._scene;
-    window._groundId = window._groundId ? window._groundId : "01";
+    window._groundId = window._groundId ? window._groundId : "00";
     
     const groundFrame = scene.textures.getFrame("groundSquare_" + window._groundId + "_001.png");
     this._tileW = groundFrame ? groundFrame.width : 1012;
@@ -449,7 +452,7 @@ window.LevelObject = class LevelObject {
     this._ceilingShadowR = scene.add.image(screenWidth + 1, groundY, "GJ_WebSheet", "groundSquareShadow_001.png").setOrigin(1, 1).setScrollFactor(0).setDepth(22).setAlpha(shadowAlpha).setScale(0.7, 1).setFlipX(true).setFlipY(true).setBlendMode(E).setVisible(false);
   }
   applyGroundTexture() {
-    const gId = window._groundId || "01";
+    const gId = window._groundId || "00";
     const texKey = "groundSquare_" + gId + "_001.png";
     if (!this._scene.textures.exists(texKey)) return;
     const groundFrame = this._scene.textures.getFrame(texKey);
