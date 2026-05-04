@@ -1625,10 +1625,11 @@ if (this.p.isFlying || this.p.isUfo) {
     this._rotation = this.slerp2D(this._rotation, _0x183c2a, _0x17a9a6);
   }
   updateBallRoll(_0x1dd8af, onSurface) {
-    const _0x136f29 = this.p.gravityFlipped ? -1 : 1;
+    const gravityDir = this.p.gravityFlipped ? -1 : 1;
+	  const rollDir = this.p.mirrored ? -gravityDir : gravityDir;
     const speedFactor = onSurface ? 0.5 : 0.35;
     const miniRollScale = this.p.isMini ? 1 / 0.8 : 1;
-    this._rotation += _0x1dd8af / (g / 2) * _0x136f29 * speedFactor * miniRollScale;
+    this._rotation += _0x1dd8af / (g / 2) * gravityDir * speedFactor * miniRollScale;
   }
   updateShipRotation(_0x217ad3) {
     let _0x48f422 = -(this.p.y - this.p.lastY);
