@@ -317,7 +317,6 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
 
     this._openCreatorMenu = () => {
       if (this._creatorOverlay) return;
-      this._creatorMenuOpen = true;
 
       const sw = screenWidth;
       const sh = screenHeight;
@@ -394,7 +393,6 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
           .setScrollFactor(0).setDepth(104).setScale(btnScale);
         const isSearchButton  = frame === "GJ_searchBtn_001.png";
         const isFeaturedButton = frame === "GJ_featuredBtn_001.png";
-        const isEditorButton = frame === "GJ_createBtn_001.png"; 
         if (isSearchButton) {
           btn.setInteractive();
           this._makeBouncyButton(btn, btnScale, () => {
@@ -407,12 +405,6 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
             this._closeCreatorMenu(true);
             this._openOnlineLevelsScene({ type: 6 });
           }, () => true);
-        } else if (isEditorButton) {
-          btn.setInteractive();
-          this._makeBouncyButton(btn, btnScale, () => {
-            this._closeCreatorMenu(true);
-            this._openEditorMenu();
-          }, () => true);
         } else {
           btn.setTint(0x666666);
         }
@@ -421,589 +413,6 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
     };
     this._searchOverlay = null;
     this._searchOverlayObjects = [];
-    this._openEditorMenu = () => {
-        if (this._editorOverlay) return;
-        const sw = screenWidth;
-        const sh = screenHeight;
-        const centerX = sw / 2;
-
-        const fadeIn = this.add.graphics().setScrollFactor(0).setDepth(200);
-        fadeIn.fillStyle(0x000000, 1);
-        fadeIn.fillRect(0, 0, sw, sh);
-        this.tweens.add({ targets: fadeIn, alpha: 0, duration: 300, ease: "Linear", onComplete: () => fadeIn.destroy() });
-
-        const overlay = this.add.graphics().setScrollFactor(0).setDepth(100);
-        const gradientSteps = 80;
-        for (let gi = 0; gi < gradientSteps; gi++) {
-            const t = gi / (gradientSteps - 1);
-            const r1 = Math.round(0x00 + (0x01 - 0x00) * t);
-            const g1 = Math.round(0x65 + (0x2c - 0x65) * t);
-            const b1 = Math.round(0xff + (0x71 - 0xff) * t);
-            const bandColor = (r1 << 16) | (g1 << 8) | b1;
-            overlay.fillStyle(bandColor, 1);
-            overlay.fillRect(0, Math.floor(gi * sh / gradientSteps), sw, Math.ceil(sh / gradientSteps) + 1);
-        }
-        this._editorOverlay = overlay;
-
-        const blocker = this.add.zone(centerX, sh / 2, sw, sh).setScrollFactor(0).setDepth(101).setInteractive();
-        const container = this.add.container(0, 0).setScrollFactor(0).setDepth(102);
-
-        const tableW = 712;
-        const tableH = 460;
-        const tableX = (sw - tableW) / 2;
-        const tableY = 85;
-
-        const rawData = localStorage.getItem("created_levels");
-        const createdLevels = rawData ? JSON.parse(rawData) : [];
-
-        createdLevels.sort((a, b) => {
-            const idA = parseInt(a.createdId.replace("local_", "")) || 0;
-            const idB = parseInt(b.createdId.replace("local_", "")) || 0;
-            return idB - idA;
-        });
-
-        const nameCounts = {};
-        const levelRevisions = {};
-
-        createdLevels.forEach(lvl => {
-            const name = lvl.levelName;
-            if (!nameCounts[name]) {
-                nameCounts[name] = 1;
-                levelRevisions[lvl.createdId] = "";
-            } else {
-                levelRevisions[lvl.createdId] = `Rev. ${nameCounts[name]}`;
-                nameCounts[name]++;
-            }
-        });
-
-        const lengthValues=[
-          "Tiny", "Short", "Medium", "Long", "XL"
-        ]
-
-        const listContainer = this.add.container(0, 0);
-        const maskShape = this.add.graphics().fillStyle(0xffffff).fillRect(tableX, tableY, tableW, tableH).setVisible(false);
-        const mask = maskShape.createGeometryMask();
-        listContainer.setMask(mask);
-        container.add(this.add.graphics().setScrollFactor(0).setDepth(90).fillStyle(0xc2723e, 1).fillRect(tableX, tableY, tableW, tableH));
-        container.add(listContainer);
-
-        createdLevels.forEach((level, index) => {
-            const spacing = 100;
-            const slotY = (index * spacing) + (spacing / 2);
-            
-            const isOdd = index % 2 !== 0;
-            const stripeColor = isOdd ? 0xc2723e : 0xa1582c;
-
-            const bgStripe = this.add.rectangle(centerX, slotY, tableW - 10, spacing, stripeColor, 1);
-            const separator = this.add.rectangle(centerX, slotY + (spacing / 2), tableW - 10, 1, 0x502c16, 1);
-            const nameTxt = this.add.bitmapText(tableX + 20, slotY - 22, "bigFont", level.levelName, 32).setOrigin(0, 0.5);
-            const revLabel = levelRevisions[level.createdId];
-            console.log(levelRevisions[level.createdId]);
-            const revText = this.add.bitmapText(
-                nameTxt.x + nameTxt.width + 10,
-                nameTxt.y + 5,
-                "goldFont",
-                revLabel, 
-                20
-            ).setOrigin(0, 0.5);
-            const infoY = slotY + 18;
-            const lenIcon = this.add.image(tableX + 35, infoY, "GJ_GameSheet03", "GJ_timeIcon_001.png").setScale(0.65);
-            const lenTxt = this.add.bitmapText(lenIcon.x + 22, infoY, "bigFont", lengthValues[level.levelLength], 18).setOrigin(0, 0.5);
-            const songIcon = this.add.image(tableX + 150, infoY, "GJ_GameSheet03", "GJ_musicIcon_001.png").setScale(0.65);
-            const songTxt = this.add.bitmapText(songIcon.x + 22, infoY, "bigFont", level.song, 18).setOrigin(0, 0.5);
-            const statusIcon = this.add.image(tableX + 380, infoY, "GJ_GameSheet03", "GJ_infoIcon_001.png").setScale(0.65).setFlipY(true).setAngle(90);
-            const statusTxt = this.add.bitmapText(statusIcon.x + 22, infoY, "bigFont", level.status, 18).setOrigin(0, 0.5);
-            
-            const viewBtn = this.add.nineslice(tableX + tableW - 80, slotY, "GJ_button01", null, 60, 30, 12, 12, 12, 12 ).setScale(1.5).setInteractive();
-            const viewTxt = this.add.bitmapText(viewBtn.x - 2, viewBtn.y - 1, "bigFont", "View", 32).setOrigin(0.5).setScale(0.8);
-            
-            this._makeBouncyButton(viewBtn, 1.5, () => {
-                this._closeEditorMenu(false);
-                this._openLevelView(level);
-            });
-
-            listContainer.add([bgStripe, separator, nameTxt, revText, lenIcon, lenTxt, songIcon, songTxt, statusIcon, statusTxt, viewBtn, viewTxt]);
-        });
-        if (createdLevels.length === 0) {
-            container.add(this.add.bitmapText(centerX, tableY + (tableH/2), "bigFont", "No Levels", 30).setOrigin(0.5).setAlpha(0.5));
-        }
-        const sideFrame = this.textures.getFrame("GJ_WebSheet", "GJ_table_side_001.png");
-        const sideScaleY = tableH / sideFrame.height;
-        container.add(this.add.image(tableX - 40, tableY, "GJ_WebSheet", "GJ_table_side_001.png").setOrigin(0, 0).setScale(1, sideScaleY));
-        container.add(this.add.image(tableX + tableW + 40, tableY, "GJ_WebSheet", "GJ_table_side_001.png").setOrigin(1, 0).setFlipX(true).setScale(1, sideScaleY));
-        container.add(this.add.image(centerX, tableY - 10, "GJ_WebSheet", "GJ_table_top_001.png"));
-        container.add(this.add.image(centerX, tableY + tableH + 20, "GJ_WebSheet", "GJ_table_bottom_001.png"));
-        container.add(this.add.bitmapText(centerX, tableY - 15, "bigFont", "My Levels", 42).setOrigin(0.5).setScale(1.1));
-
-        let startY = tableY;
-        const listHeight = createdLevels.length * 100;
-        const minY = tableY - Math.max(0, listHeight - tableH) - 10;
-        const maxY = tableY + 22;
-
-        listContainer.y = maxY;
-        this._scrollTargetY = maxY;
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            if (!this._editorOverlay) return;
-            this._scrollTargetY -= deltaY;
-            this._scrollTargetY = Phaser.Math.Clamp(this._scrollTargetY, minY, maxY);
-
-            this.tweens.add({
-                targets: listContainer,
-                y: this._scrollTargetY,
-                duration: 250,
-                ease: 'Power2',
-                overwrite: true
-            });
-        });
-        blocker.on('pointerdown', (pointer) => {
-            startY = pointer.y - listContainer.y;
-        });
-
-        blocker.on('pointermove', (pointer) => {
-            if (pointer.isDown) {
-                listContainer.y = pointer.y - startY;
-                listContainer.y = Phaser.Math.Clamp(listContainer.y, minY, maxY);
-            }
-        });
-
-        const newBtnX = sw - 60;
-        const newBtnY = sh - 55;
-        const newBtn = this.add.image(newBtnX, newBtnY, "GJ_GameSheet03", "GJ_newBtn_001.png")
-            .setScale(0.9)
-            .setInteractive();
-        
-        this._makeBouncyButton(newBtn, 0.9, () => {
-            const rawData = localStorage.getItem("created_levels");
-            let createdLevels = rawData ? JSON.parse(rawData) : [];
-
-            let counter = 0;
-            while (createdLevels.some(lvl => lvl.levelName === "Unnamed " + counter)) {
-                counter++;
-            }
-            const newName = "Unnamed " + counter;
-
-            const newLevel = {
-                levelName: newName,
-                song: "Stereo Madness",
-                songId: -1,
-                levelId: null,
-                levelString: "H4sIAAAAAAAACq1QwRHDMAhbyO0hwIlzfWWGDsAAXaHD10Z-9Ff3Ln4gG4GMeD2tFYRLaEBrWGitARCUwKTHDbEFRCT2wF3yBOrXvYVEC7wRKSi6JoirBY8FwdHB9iVJjZ5ckP1rlf19taIv7pLGh-wP43XROPq9z9mOtX1uS7LldcKKzPx41ZKwEbz0yPueUSfPF9qApx3kMlrGJE7PSBbCIlYpy5QVuheMciE0AgiaoFRUihk5I2ec0Knp1PTK9slxYDM2OIFmjL8bv-1mBmB6YrvO4UErHR4fJXMaP9sDAAA=", 
-                levelLength: 0,
-                normalBest: 0,
-                practiceBest: 0,
-                description: "",
-                version: 1,
-                status: "Unverified",
-                createdId: this._getNextLocalId()
-            };
-
-            createdLevels.push(newLevel);
-            localStorage.setItem("created_levels", JSON.stringify(createdLevels));
-
-            this._closeEditorMenu();
-            this._openLevelView(newLevel);
-            
-            this._audio.playEffect("build_01");
-        });
-        container.add(newBtn);
-
-        const importBtn = this.add.image(newBtnX, newBtnY - 90, "import").setScale(0.3).setInteractive();
-        this._makeBouncyButton(importBtn, 0.3, () => {
-            this._importGMD();
-        });
-        container.add(importBtn);
-
-        const backBtn = this.add.image(50, 48, "GJ_GameSheet03", "GJ_arrow_03_001.png")
-            .setScrollFactor(0).setDepth(104).setFlipX(true).setFlipY(true).setRotation(Math.PI).setInteractive();
-        
-        this._makeBouncyButton(backBtn, 1, () => {
-          this._closeEditorMenu();
-          this._openCreatorMenu(); 
-        });
-
-        this._editorObjects = [overlay, blocker, container, backBtn, maskShape];
-    };
-    this._importGMD = () => {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.gmd';
-
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const content = event.target.result;
-                try {
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(content, "text/xml");
-                    const keys = xmlDoc.querySelectorAll("key, k");
-                    
-                    let extracted = {
-                        name: "Imported Level",
-                        data: "",
-                        version: 1,
-                        length: 0,
-                        id: "NA",
-                        desc: "",
-                        officialSongId: 0,
-                        customSongId: 0
-                    };
-
-                    keys.forEach(keyNode => {
-                        const k = keyNode.textContent;
-                        const v = keyNode.nextElementSibling;
-                        if (!v) return;
-                        const val = v.textContent;
-
-                        if (k === "k2") extracted.name = val;
-                        if (k === "k4") extracted.data = val;
-                        if (k === "k1") extracted.id = val;
-                        if (k === "k23") extracted.length = parseInt(val) || 0;
-                        if (k === "k16") extracted.version = parseInt(val) || 1;
-                        if (k === "k8") extracted.officialSongId = parseInt(val) || 0;
-                        if (k === "k45") extracted.customSongId = parseInt(val) || 0;
-                        if (k === "k3") {
-                            try { extracted.desc = atob(val); } catch(e) { extracted.desc = val; }
-                        }
-                    });
-
-                    if (!extracted.data) throw new Error("No level string found.");
-
-                    let finalSongName = "Stereo Madness";
-                    let finalSongId = -1;
-
-                    if (extracted.customSongId > 0) {
-                        finalSongId = extracted.customSongId;
-                        finalSongName = `NG#${extracted.customSongId}`;
-                    } else {
-                        finalSongId = -extracted.officialSongId -1;
-                        try {
-                            finalSongName = window.allLevels[extracted.officialSongId][0];
-                        } catch(e) {
-                            finalSongName = "Unknown";
-                        }
-                    }
-
-                    const rawLevels = localStorage.getItem("created_levels");
-                    let createdLevels = rawLevels ? JSON.parse(rawLevels) : [];
-                    
-                    const newLevel = {
-                        levelName: extracted.name,
-                        song: finalSongName,
-                        songId: finalSongId,
-                        levelId: (extracted.id === "0" || !extracted.id) ? "NA" : extracted.id,
-                        levelString: extracted.data, 
-                        levelLength: extracted.length,
-                        normalBest: 0,
-                        practiceBest: 0,
-                        description: extracted.desc || "",
-                        version: extracted.version,
-                        status: "Unverified",
-                        createdId: this._getNextLocalId()
-                    };
-
-                    createdLevels.push(newLevel);
-                    localStorage.setItem("created_levels", JSON.stringify(createdLevels));
-                    
-                    this._closeEditorMenu(false);
-                    this._openLevelView(newLevel);
-
-                } catch (err) {
-                    console.error("GMD Import Error:", err);
-                    alert("Failed to parse .gmd: " + err.message);
-                }
-            };
-            reader.readAsText(file);
-        };
-
-        fileInput.click();
-    };
-    this._exportGMD = (level) => {
-        const encodedDesc = btoa(level.description || "");
-        const authorName = "Web Dashers";
-        
-        const officialSong = level.songId < 0 ? Math.abs(level.songId) : 0;
-        const customSong = level.songId > 0 ? level.songId : 0;
-
-        let xml = '<?xml version="1.0"?>';
-        xml += '<plist version="1.0" gjver="2.0">';
-        xml += '<dict>';
-        xml += '<k>kCEK</k><i>4</i>';
-        xml += `<k>k1</k><i>${level.levelId && level.levelId !== "NA" ? level.levelId.replace(/\D/g, "") : 0}</i>`;
-        xml += `<k>k18</k><i>${level.levelLength || 0}</i>`;
-        xml += `<k>k23</k><i>${level.levelLength || 0}</i>`;
-        xml += `<k>k2</k><s>${level.levelName}</s>`;
-        xml += `<k>k4</k><s>${level.levelString}</s>`;
-        xml += `<k>k3</k><s>${encodedDesc}</s>`;
-        xml += `<k>k5</k><s>${authorName}</s>`;
-        xml += '<k>k101</k><s>0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0</s>';
-        xml += `<k>k8</k><i>${officialSong - 1}</i>`;
-        xml += `<k>k45</k><i>${customSong}</i>`;
-        xml += `<k>k16</k><i>${level.version || 1}</i>`;
-        xml += '<k>k13</k><t/><k>k21</k><i>2</i><k>k50</k><i>47</i>';
-        xml += '<k>kI1</k><r>0</r><k>kI2</k><r>0</r><k>kI3</k><r>0.1</r>';
-        xml += '<k>kI6</k><d><k>0</k><s>0</s><k>1</k><s>0</s><k>2</k><s>0</s><k>3</k><s>0</s><k>4</k><s>0</s><k>5</k><s>0</s><k>6</k><s>0</s><k>7</k><s>0</s><k>8</k><s>0</s><k>9</k><s>0</s><k>10</k><s>0</s><k>11</k><s>0</s><k>12</k><s>0</s><k>13</k><s>0</s></d>';
-        xml += '</dict></plist>';
-        const blob = new Blob([xml], { type: 'text/xml' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        const fileName = `${level.levelName.replace(/[^a-z0-9]/gi, '_')}.gmd`;
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    };
-    this._getNextLocalId = () => {
-        const rawData = localStorage.getItem("created_levels");
-        const levels = rawData ? JSON.parse(rawData) : [];
-        let maxId = 0;
-        levels.forEach(l => {
-            if (l.createdId && typeof l.createdId === "string") {
-                const idNum = parseInt(l.createdId.split('_')[1]);
-                if (!isNaN(idNum) && idNum > maxId) {
-                    maxId = idNum;
-                }
-            }
-        });
-        return "local_" + (maxId + 1);
-    };
-    this._openLevelView = (level) => {
-        const sw = screenWidth;
-        const sh = screenHeight;
-        const centerX = sw / 2;
-        const saveToLS = (key, val) => {
-            const rawData = localStorage.getItem("created_levels");
-            let levels = rawData ? JSON.parse(rawData) : [];
-            const idx = levels.findIndex(l => l.createdId === level.createdId);
-            if (idx !== -1) {
-                levels[idx][key] = val;
-                localStorage.setItem("created_levels", JSON.stringify(levels));
-            }
-        };
-        const deleteLevel = () => {
-            if (!confirm(`Are you sure you want to delete ${level.levelName}?`)) return;
-            const rawData = localStorage.getItem("created_levels");
-            let levels = rawData ? JSON.parse(rawData) : [];
-            levels = levels.filter(l => l.createdId !== level.createdId);
-            localStorage.setItem("created_levels", JSON.stringify(levels));
-            cleanup();
-            this._openEditorMenu();
-        };
-        this._activeInput = null;
-        let cursorVisible = true;
-
-        const blocker = this.add.zone(centerX, sh / 2, sw, sh)
-            .setOrigin(0.5).setDepth(101).setInteractive();
-        blocker.on('pointerdown', () => { this._activeInput = null; });
-        const overlay = this.add.graphics().setScrollFactor(0).setDepth(102);
-        const gradientSteps = 80;
-        for (let gi = 0; gi < gradientSteps; gi++) {
-            const t = gi / (gradientSteps - 1);
-            const r1 = Math.round(0x00 + (0x01 - 0x00) * t);
-            const g1 = Math.round(0x65 + (0x2c - 0x65) * t);
-            const b1 = Math.round(0xff + (0x71 - 0xff) * t);
-            const bandColor = (r1 << 16) | (g1 << 8) | b1;
-            overlay.fillStyle(bandColor, 1);
-            overlay.fillRect(0, Math.floor(gi * sh / gradientSteps), sw, Math.ceil(sh / gradientSteps) + 1);
-        }
-
-        const container = this.add.container(0, 0).setDepth(150);
-        const boxWidth = sw * 0.6;
-        const cornerRad = 18;
-
-        const nameY = 50;
-        const nameBox = this.add.graphics().setDepth(151).setInteractive(new Phaser.Geom.Rectangle(centerX - (boxWidth / 2), nameY - 28, boxWidth, 70), Phaser.Geom.Rectangle.Contains);
-        nameBox.fillStyle(0x000000, 0.3).fillRoundedRect(centerX - (boxWidth / 2), nameY - 28, boxWidth, 70, cornerRad);
-        const titleText = this.add.bitmapText(centerX, nameY + 5, "bigFont", level.levelName, 45).setOrigin(0.5).setDepth(152);
-        const titleCursor = this.add.bitmapText(0, nameY + 5, "bigFont", "|", 45).setOrigin(0, 0.5).setDepth(153).setVisible(false);
-
-        const descY = 180;
-        const descH = 120;
-        const descBox = this.add.graphics().setDepth(151).setInteractive(new Phaser.Geom.Rectangle(centerX - (boxWidth / 2), descY - (descH / 2), boxWidth, descH), Phaser.Geom.Rectangle.Contains);
-        descBox.fillStyle(0x000000, 0.3).fillRoundedRect(centerX - (boxWidth / 2), descY - (descH / 2), boxWidth, descH, cornerRad);
-        const descText = this.add.text(centerX, descY, level.description || "Description [Optional]", {
-            fontFamily: "Helvetica, Arial, sans-serif",
-            fontSize: "22px",
-            color: "#ffffff",
-            align: "center",
-            lineSpacing: 4,
-            wordWrap: { width: boxWidth - 40, useAdvancedWrap: true }
-        }).setOrigin(0.5).setDepth(152);
-        const descCursor = this.add.text(0, 0, "|", { fontFamily: "Helvetica", fontSize: "18px", color: "#ffffff" })
-            .setOrigin(0.5).setDepth(153).setVisible(false);
-
-        const updateDisplay = () => {
-            titleText.setText(level.levelName);
-            if (this._activeInput === 'title') {
-                titleCursor.setPosition(titleText.x + (titleText.width / 2) + 2, nameY + 5).setVisible(cursorVisible);
-                descCursor.setVisible(false);
-            } 
-            else if (this._activeInput === 'desc') {
-                descText.setText(level.description || "");
-                titleCursor.setVisible(false);
-
-                const lines = descText.getWrappedText(level.description || "");
-                const lineCount = lines.length;
-                const lastLine = lines[lineCount - 1] || "";                
-                const metrics = descText.canvas.getContext('2d').measureText(lastLine);
-                const lastLineWidth = metrics.width;
-
-                const size = 22;
-                const spacing = 4;
-                const fullLineHeight = size + spacing;
-                const totalHeight = (lineCount * fullLineHeight) - spacing;
-                
-                const topOfText = descY - (totalHeight / 2);
-                const cursorY = topOfText + ((lineCount - 1) * fullLineHeight) + (size / 2);
-
-                descCursor.setPosition(centerX + (lastLineWidth / 2) + 2, cursorY).setVisible(cursorVisible);
-            } else {
-                descText.setText(level.description || "Description [Optional]");
-                titleCursor.setVisible(false);
-                descCursor.setVisible(false);
-            }
-        };
-
-        const cursorInterval = setInterval(() => {
-            cursorVisible = !cursorVisible;
-            updateDisplay();
-        }, 500);
-
-        const keyHandler = (event) => {
-            if (!this._activeInput) return;
-            if (event.key === "Backspace") {
-                if (this._activeInput === 'title') level.levelName = level.levelName.slice(0, -1);
-                else level.description = (level.description || "").slice(0, -1);
-            } else if (event.key === "Enter") {
-                this._activeInput = null;
-            } else if (event.key.length === 1) {
-                if (this._activeInput === 'title' && level.levelName.length < 20) {
-                    level.levelName += event.key;
-                } else if (this._activeInput === 'desc' && (level.description || "").length < 150) {
-                    level.description = (level.description || "") + event.key;
-                }
-            }
-            saveToLS(this._activeInput === 'title' ? "levelName" : "description", 
-                    this._activeInput === 'title' ? level.levelName : level.description);
-            cursorVisible = true;
-            updateDisplay();
-        };
-
-        window.addEventListener('keydown', keyHandler);
-        nameBox.on('pointerdown', () => { this._activeInput = 'title'; updateDisplay(); });
-        descBox.on('pointerdown', () => { this._activeInput = 'desc'; updateDisplay(); });
-
-        const cleanup = () => {
-            clearInterval(cursorInterval);
-            window.removeEventListener('keydown', keyHandler);
-            container.destroy();
-            overlay.destroy();
-            blocker.destroy();
-        };
-
-        const btnY = sh * 0.58;
-        const editBtn = this.add.image(centerX - 220, btnY, "GJ_GameSheet03", "GJ_editBtn_001.png").setInteractive().setFlipY(true).setAngle(90).setScale(1.1);
-        this._makeBouncyButton(editBtn, 1.1, () => { cleanup(); this._startEditor(level); });
-        const playBtn = this.add.image(centerX, btnY, "GJ_GameSheet03", "GJ_playBtn2_001.png").setInteractive().setFlipY(true).setAngle(90).setScale(1.1);
-        this._makeBouncyButton(playBtn, 1.1, () => { cleanup(); this._startCreatedLevel(level); });
-        const shareBtn = this.add.image(centerX + 220, btnY, "GJ_GameSheet03", "GJ_shareBtn_001.png").setInteractive().setFlipY(true).setAngle(90).setScale(1.1);
-        this._makeBouncyButton(shareBtn, 1.1, () => { this._exportGMD(level); });
-        const backBtn = this.add.image(50, 48, "GJ_GameSheet03", "GJ_arrow_03_001.png").setFlipX(true).setFlipY(true).setRotation(Math.PI).setInteractive();
-        this._makeBouncyButton(backBtn, 1, () => { cleanup(); this._openEditorMenu(); });
-        const deleteBtn = this.add.image(sw - 50, 48, "GJ_GameSheet03", "GJ_deleteBtn_001.png").setInteractive().setFlipY(true).setAngle(90).setScale(0.8);
-        this._makeBouncyButton(deleteBtn, 0.8, () => { deleteLevel(); });
-
-        const footerY = sh - 100; 
-        const subFooterY = sh - 30;
-        const lengthValues=[
-          "Tiny", "Short", "Medium", "Long", "XL"
-        ]
-
-        const lengthIcon = this.add.image(centerX - 350, footerY, "GJ_GameSheet03", "GJ_timeIcon_001.png").setScale(1).setDepth(152);
-        const lengthLabel = this.add.bitmapText(centerX - 310, footerY, "bigFont", lengthValues[level.levelLength], 33).setOrigin(0, 0.5).setDepth(152);
-        const songIcon = this.add.image(centerX - 160, footerY, "GJ_GameSheet03", "GJ_musicIcon_001.png").setScale(1).setDepth(152);
-        const songLabel = this.add.bitmapText(centerX - 115, footerY, "bigFont", level.song, 29).setOrigin(0, 0.5).setDepth(152);
-        const statusIcon = this.add.image(centerX + 200, footerY, "GJ_GameSheet03", "GJ_infoIcon_001.png").setScale(1).setDepth(152).setFlipY(true).setAngle(90);
-        const statusLabel = this.add.bitmapText(centerX + 245, footerY, "bigFont", level.status, 33).setOrigin(0, 0.5).setDepth(152);
-        const versionText = this.add.bitmapText(centerX - 180, subFooterY, "goldFont", `Version: ${level.version || 1}`, 30).setOrigin(0.5).setDepth(152);
-        const idText = this.add.bitmapText(centerX + 180, subFooterY, "goldFont", `ID: ${level.levelId || "na"}`, 30).setOrigin(0.5).setDepth(152);
-
-        container.add([nameBox, titleText, titleCursor, descBox, descText, descCursor, playBtn, editBtn, shareBtn, backBtn, deleteBtn, lengthIcon, lengthLabel, songIcon, songLabel, statusIcon, statusLabel, versionText, idText]);
-    };
-    this._startCreatedLevel = async (level) => {
-        const PROXY_BASE = (window._gdProxyUrl || "").replace(/\/$/, "");
-        window._onlineLevelString = level.levelString;
-        window._onlineLevelName = level.levelName;
-        window._onlineLevelId = level.createdId;
-        window._onlineSongBuffer = null;
-        window._onlineSongKey = null;
-        window._onlineSongOffset = 0;
-        this.game.registry.set("autoStartGame", true);
-        window.currentlevel = [
-            "Placeholder",
-            level.levelName,
-            level.createdId,
-            ["Local", "SongAuthor"]
-        ];
-        if (level.songId < 0){
-          window.currentlevel[0] = window.allLevels[Math.abs(level.songId) - 1][0];
-          window.currentlevel[3] = ["Local", window.allLevels[Math.abs(level.songId) - 1][3]]
-        } else {
-          const songId = level.songId;
-          const songKey = `ng_song_${songId}`;
-          window.currentlevel[0] = songKey;
-          
-          if (PROXY_BASE && songId > 0) {
-              try {                  
-                  const ngRes = await fetch(`${PROXY_BASE}/getGJSongInfo.php`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                      body: `songID=${songId}&secret=Wmfd2893gb7`
-                  });
-                  
-                  const ngText = ngRes.ok ? await ngRes.text() : "-1";
-                  if (ngText && ngText !== "-1") {
-                      const ngParts = ngText.split("~|~");
-                      const ngMap = {};
-                      for (let i = 0; i + 1 < ngParts.length; i += 2) ngMap[ngParts[i]] = ngParts[i + 1];
-
-                      const songUrl = decodeURIComponent((ngMap["10"] || "").trim());
-                      const songArtist = (ngMap["4"] || "Unknown").replace(/:$/, "").trim();
-                      const songTitle = (ngMap["2"] || `Song #${songId}`).replace(/:$/, "").trim();
-
-                      if (songUrl) {
-                          const audioCtx = this.game.sound.context;
-                          if (audioCtx.state === "suspended") await audioCtx.resume();
-                          const proxiedUrl = `${PROXY_BASE}/audio-proxy?url=${encodeURIComponent(songUrl)}`;
-                          const audioRes = await fetch(proxiedUrl);
-                          const arrayBuf = await audioRes.arrayBuffer();
-                          const decoded = await audioCtx.decodeAudioData(arrayBuf);
-                          window._onlineSongBuffer = decoded;
-                          window._onlineSongKey = songKey;
-                          window._onlineSongTitle = songTitle;
-                          window._onlineSongArtist = songArtist;
-                          
-                          window.currentlevel[3] = ["Local", window._onlineSongArtist]
-                      }
-                  }
-              } catch (err) {
-                  console.warn("Failed to load custom song", err);
-              }
-          }
-        }
-        this.scene.restart();
-    };
-    this._closeEditorMenu = () => {
-        if (this._editorObjects) {
-            this._editorObjects.forEach(obj => obj.destroy());
-        }
-        this._editorOverlay = null;
-        this._editorObjects = null;
-    };
     this._openSearchMenu = () => {
       if (this._searchOverlay) return;
       const sw = screenWidth;
@@ -1951,7 +1360,6 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
     };
     this._closeCreatorMenu = (silent = false) => {
       if (!this._creatorOverlay) return;
-      if (silent == false) this._creatorMenuOpen = false;
       const destroy = () => {
         if (this._creatorOverlayObjects) {
           for (const obj of this._creatorOverlayObjects) {
@@ -2008,7 +1416,6 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
     this._spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this._upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
     this._wKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-    this._lKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L);
     this._leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
     this._rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
     this._aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
@@ -2798,6 +2205,11 @@ this._menuUpdateLogBtn = this.add.image(screenWidth - 30 - 50, 33, "GJ_WebSheet"
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(999).setVisible(false);
     this._fpsAccum = 0;
     this._fpsFrames = 0;
+    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H).on("down", () => {
+      if (!this._settingsPopup){
+        this._fpsText.setVisible(!this._fpsText.visible);
+      }
+    });
   }
   _createStartPosGui() {
         const centerX = screenWidth / 2;
@@ -3107,19 +2519,17 @@ _buildSettingsPopup() {
     };
 
     const buildGameplayPage = (container) => {
-        createToggle(container, column1X, startY, "Show Percentage", 
-            () => window.showPercentage, 
+        createToggle(container, column1X, startY, "Show Percentage",
+            () => window.showPercentage,
             (v) => window.showPercentage = v,
             (v) => { if (this._percentageLabel) this._percentageLabel.setVisible(v); }
         );
-
-        createToggle(container, column1X, startY + spacingY, "Percentage Decimals", 
-            () => window.percentageDecimals, 
+        createToggle(container, column1X, startY + spacingY, "Percentage Decimals",
+            () => window.percentageDecimals,
             (v) => window.percentageDecimals = v
         );
-
-        createToggle(container, column1X, startY + (spacingY * 2), "StartPos Switcher", 
-            () => window.startPosSwitcher, 
+        createToggle(container, column1X, startY + (spacingY * 2), "StartPos Switcher",
+            () => window.startPosSwitcher,
             (v) => window.startPosSwitcher = v,
             (v) => {
                 if (!v) this._startPosIndex = -1;
@@ -3128,9 +2538,8 @@ _buildSettingsPopup() {
                 if (this._startPosText) this._startPosText.setText(`0/${total}`);
             }
         );
-
-        createToggle(container, column1X, startY + (spacingY * 3), "Noclip", 
-            () => window.noClip, 
+        createToggle(container, column1X, startY + (spacingY * 3), "Noclip",
+            () => window.noClip,
             (v) => window.noClip = v,
             (v) => { if (this._noclipIndicator) this._noclipIndicator.setVisible(v); }
         );
@@ -3141,37 +2550,23 @@ _buildSettingsPopup() {
     };
 
     const buildVisualPage = (container) => {
-        createToggle(container, column1X, startY, "Show Hitboxes", 
-            () => window.showHitboxes, 
+        createToggle(container, column1X, startY, "Show Hitboxes",
+            () => window.showHitboxes,
             (v) => window.showHitboxes = v,
-            (v) => { 
-                if (!v) {
-                    this._player._hitboxGraphics.clear(); 
-                } else {
-                    this._player.drawHitboxes(this._player._hitboxGraphics, this._cameraX, this._cameraY);
-                }
-            }
+            (v) => { if (!v && this._player._hitboxGraphics) this._player._hitboxGraphics.clear(); }
         );
-
-        createToggle(container, column1X, startY + (spacingY), "Hitbox Trail", 
-            () => window.showHitboxTrail, 
+        createToggle(container, column1X, startY + spacingY, "Hitbox Trail",
+            () => window.showHitboxTrail,
             (v) => window.showHitboxTrail = v,
-            (v) => { if (window.showHitboxes) this._player.drawHitboxes(this._player._hitboxGraphics, this._cameraX, this._cameraY); }
+            (v) => { if (!v) this._hitboxTrail = []; }
         );
-        
-        createToggle(container, column1X, startY + (spacingY * 2), "Hitboxes on Death", 
-            () => window.hitboxesOnDeath, 
-            (v) => window.hitboxesOnDeath = v
-        );
-
-        createToggle(container, column1X, startY + (spacingY * 3), "Show FPS", 
-            () => this._fpsText.visible, 
+        createToggle(container, column1X, startY + (spacingY * 2), "Show FPS",
+            () => this._fpsText.visible,
             (v) => this._fpsText.visible = v,
             (v) => { if (this._fpsText) this._fpsText.setVisible(v); }
         );
-
-        createToggle(container, column1X, startY + (spacingY * 4), "Solid Wave Trail", 
-            () => window.solidWave, 
+        createToggle(container, column1X, startY + (spacingY * 3), "Solid Wave Trail",
+            () => window.solidWave,
             (v) => window.solidWave = v
         );
     };
@@ -3204,8 +2599,7 @@ _buildSettingsPopup() {
         hitboxTrail: window.showHitboxTrail,
         showFPS: this._fpsText.visible,
         solidWaveTrail: window.solidWave,
-        noclipAccuracy: window.noClipAccuracy,
-        hitboxesOnDeath: window.hitboxesOnDeath
+        noclipAccuracy: window.noClipAccuracy
     };
     localStorage.setItem("gd_settings", JSON.stringify(settings));
   }
@@ -3220,8 +2614,7 @@ _buildSettingsPopup() {
         hitboxTrail: false,
         showFPS: false,
         solidWaveTrail: false,
-        noclipAccuracy: false,
-        hitboxesOnDeath: false
+        noclipAccuracy: false
     };
 
     const data = saved ? JSON.parse(saved) : defaults;
@@ -3235,7 +2628,6 @@ _buildSettingsPopup() {
     this._fpsText.visible = data.showFPS;
     window.solidWave = data.solidWaveTrail;
     window.noClipAccuracy = data.noclipAccuracy;
-    window.hitboxesOnDeath = data.hitboxesOnDeath;
   }
   
   _buildInfoPopup() {
@@ -4426,7 +3818,7 @@ _buildSettingsPopup() {
       this._fpsFrames = 0;
     }
     if (this._paused) {
-      if (!this._updateLogPopup && (this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown || this._lKey.isDown) && !this._spaceWasDown && !this._settingsPopup) {
+      if (!this._updateLogPopup && (this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown) && !this._spaceWasDown && !this._settingsPopup) {
         setTimeout(() => {
           this._resumeGame();
         }, 75);
@@ -4439,7 +3831,6 @@ _buildSettingsPopup() {
         this._onlineLevelsOverlay || this._settingsLayerOverlay || this._settingsPopup ||
         this._infoPopup || this._newgroundsPopup || this._statsLayerOverlay || this._updateLogPopup;
       if (!_anyOverlayOpen && (this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown) && !this._spaceWasDown) {
-        if (this._creatorMenuOpen) return;
         this._spaceWasDown = true;
         if (this._levelSelectOverlay) {
           this._audio.playEffect("playSound_01", { volume: 1 });
@@ -4461,7 +3852,7 @@ _buildSettingsPopup() {
         }
       }
       this._arrowWasDown = _arrowLeft || _arrowRight;
-      this._spaceWasDown = this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown || this._lKey.isDown;
+      this._spaceWasDown = this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown;
       const menuDelta = Math.min(deltaTime / 1000 * 60, 2);
       const menuSpeed = 0.65;
       this._menuCameraX = (this._menuCameraX || 0) + menuDelta * playerSpeed * d * menuSpeed;
@@ -4526,7 +3917,7 @@ _buildSettingsPopup() {
       }
       return;
     }
-    let _0x368ad9 = this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown || this._lKey.isDown;
+    let _0x368ad9 = this._spaceKey.isDown || this._upKey.isDown || this._wKey.isDown;
     if (!this._updateLogPopup && _0x368ad9 && !this._spaceWasDown) {
       this._pushButton();
     } else if (!_0x368ad9 && this._spaceWasDown) {
@@ -4587,7 +3978,7 @@ _buildSettingsPopup() {
           this._audio.stopMusic();
         }
         this._audio.playEffect("explode_11", {
-          volume: 0.65 * this._sfxVolume
+          volume: 0.65
         });
         this._deathSoundPlayed = true;
         this._totalDeaths++;
@@ -4947,7 +4338,7 @@ _applyMirrorEffect() {
   _showCompleteEffect() {
     this._audio.fadeOutMusic(1500);
     this.sound.play("endStart_02", {
-      volume: 0.8 * this._sfxVolume
+      volume: 0.8
     });
     (function (_0x3f5321, _0x8f5267, _0x2f1e2d, _0x4b5e5b) {
       const _0x29d856 = 2;
